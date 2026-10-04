@@ -1,4 +1,4 @@
-import {config, userId} from './config.js';
+import {config, userId, csrfToken} from './config.js';
 
 export function apiUrl(path) { return `${config.apiBase}${path}`; }
 export function runUrl(id, events = false) { return apiUrl(`/curio/runs/${encodeURIComponent(id)}${events ? '/events' : ''}?user_id=${encodeURIComponent(userId)}`); }
@@ -7,7 +7,7 @@ export async function request(path, options = {}) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 20000);
   try {
-    const response = await fetch(path.startsWith('http') ? path : apiUrl(path), {...options, signal: controller.signal, headers:{'X-Curio-User-Id': userId, ...options.headers}});
+    const response = await fetch(path.startsWith('http') ? path : apiUrl(path), {...options, credentials:'include', signal: controller.signal, headers:{'X-CSRF-Token':csrfToken,'X-Curio-User-Id': userId, ...options.headers}});
     let data; try { data = await response.json(); } catch { throw new Error('Curio returned an unreadable response. Please try again.'); }
     if (!response.ok) {
       const details = typeof data.detail === 'string' ? data.detail : null;

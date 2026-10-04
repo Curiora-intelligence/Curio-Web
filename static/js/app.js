@@ -1,5 +1,7 @@
+import {initAuth} from './auth.js';
+import {initChatServices} from './marketplace.js';
 import {bindVoiceToggle} from './voice.js';
-import {$, userId} from './config.js';
+import {$, userId,config} from './config.js';
 import {initChat} from './chat.js';
 import {initMemory} from './memory.js';
 import {initLive} from './live.js';
@@ -13,7 +15,9 @@ $('#menu').onclick = () => { $('#sidebar').classList.add('open'); $('#scrim').cl
 $('#scrim').onclick = () => { $('#sidebar').classList.remove('open'); $('#scrim').classList.remove('visible'); };
 $('#settings-button').onclick = () => $('#settings-dialog').showModal();
 for (const button of document.querySelectorAll('[data-close]')) button.onclick = () => document.getElementById(button.dataset.close).close();
+initAuth();
 initChat();
+initChatServices();
 initMemory();
 initLive();
 bindVoiceToggle($('#voice-toggle'));
@@ -55,6 +59,7 @@ async function fillDiscoveryDefaults() {
   } catch { /* Explicit criteria remain usable if memory is offline. */ }
 }
 $('#discovery-button').onclick = () => {
+  if(!config.development){location.href='/discover';return;}
   $('#discovery-dialog').showModal(); $('#category').value = state.mode === 'Shopping' ? 'shopping' : 'food';
   fillDiscoveryDefaults();
 };

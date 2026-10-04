@@ -7,10 +7,10 @@ def test_page_and_all_static_assets():
     with TestClient(app) as client:
         page = client.get('/')
         assert page.status_code == 200
-        assert 'A little more' in page.text
-        assert 'demo-sai' in page.text
+        assert 'What do you need' in page.text
+        assert 'Sign in to Curio' in page.text
         assets = re.findall(r'(?:href|src)="(http://testserver/static/[^"]+)"', page.text)
-        assert len(assets) == 9
+        assert len(assets) >= 12
         for asset in assets:
             result = client.get(asset)
             assert result.status_code == 200, asset
@@ -39,3 +39,12 @@ def test_dedicated_interview_page_uses_same_config():
         assert 'Question 1 of 5' in page.text and 'Finish Answer' in page.text
         assert 'js/interview.js' in page.text and 'js/app.js' not in page.text
         assert 'curio-config' in page.text
+
+
+def test_marketplace_routes_and_preserved_personal_features():
+    with TestClient(app) as client:
+        for page in ('discover','saved','requests','notifications','history','provider','admin','account'):
+            text=client.get('/'+page).text
+            assert 'data-page="'+page+'"' in text and 'js/marketplace.js' in text
+        home=client.get('/').text
+        assert 'Personal' in home and 'Career' in home and 'Mock Interview' in home and 'Upload' not in home or 'image-file' in home

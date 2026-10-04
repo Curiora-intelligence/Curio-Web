@@ -11,6 +11,7 @@ window.fetch = async (url, options = {}) => {
   }
   if (path.startsWith('/curio/runs/')) return Response.json(checks.answer);
   if (path.startsWith('/memory/')) return Response.json({ memories: checks.memories });
+  if (path === '/auth/me') return Response.json(null,{status:401});
   if (path === '/health') return Response.json({ status: 'ok', postgres: 'ok' });
   if (path === '/discovery/') return Response.json({ fictional: true, notice: 'Fictional demo catalogue', recommendations: [{ name: 'Demo Saffron Kitchen', price: 280, currency: 'INR', rating: 4.5, reasons: ['Within your budget', 'Matches spicy preference'], distance_km: null }] });
   throw new Error('Unexpected fixture request ' + path);

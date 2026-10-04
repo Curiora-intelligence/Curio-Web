@@ -1,12 +1,12 @@
 import {speakCurio, cancelCurioSpeech} from './voice.js';
-import {$, emit, modes, notice, element, storage, userId} from './config.js';
+import {$, emit, modes, notice, element, storage, userId,account} from './config.js';
 import {request, runForm, validateImage} from './api.js';
 import {watchRun} from './sse.js';
 
 const historyKey = `curio_chats:${userId}`, pendingKey = `curio_pending:${userId}`;
-const stageLabels = {understanding:'Understanding your request…', memory:'Checking relevant context…', reasoning:'Reasoning…', tool_execution:'Checking available options…', verification:'Verifying the result…', response:'Preparing response…'};
+const stageLabels = {understanding:'Understanding your request…', memory:'Checking relevant context…', perception:'Analyzed image', reasoning:'Working on your request…', tool_execution:'Checking available options…', verification:'Verifying the result…', response:'Preparing response…'};
 const toolLabels = {'memory.search':'Memory search', 'memory.remember':'Save memory', 'services.search':'Service discovery', 'services.explain_match':'Match explanation', 'web.search':'Web search', 'web.open':'Read source', 'web.find':'Find in source'};
-export const state = {conversationId:null, localId:crypto.randomUUID(), messages:[], mode:'Personal', busy:false, location:null};
+export const state = {conversationId:null, localId:crypto.randomUUID(), messages:[], mode:'Service', busy:false, location:null};
 let image = null, stopWatching = null;
 const nodes = new Map();
 let history = storage.read(historyKey, []);
@@ -78,14 +78,14 @@ export function setMode(mode) {
 export function completeReply(reply, data) {
   if (typeof data.answer !== 'string' || !data.conversation_id || data.user_id !== userId) { failReply(reply, 'Curio returned an incomplete response. Reopen this chat to check again.'); return; }
   reply.text = data.answer; reply.pending = false; reply.error = false; state.conversationId = data.conversation_id;
-  updateMessage(reply); save(); storage.remove(pendingKey); setBusy(false); emit('memory-refresh'); speakCurio(data.answer,{defaultOn:state.mode==='Interview'});
+  updateMessage(reply); save(); storage.remove(pendingKey); setBusy(false); emit('memory-refresh'); emit('service-response',{conversationId:state.conversationId}); speakCurio(data.answer,{defaultOn:state.mode==='Interview'});
 }
 export function failReply(reply, message) { reply.text=message; reply.pending=false; reply.error=true; updateMessage(reply); save(); storage.remove(pendingKey); setBusy(false); }
 function follow(id, reply) {
   stopWatching?.();
   stopWatching = watchRun(id, {
     stage(data) { if (!stageLabels[data.stage]) return; reply.text=stageLabels[data.stage]; if(data.stage==='memory' && data.remembered?.length)reply.activity.push({label:'Remembered',detail:data.remembered.join(' • ')}); else if(!['verification','response'].includes(data.stage))reply.activity.push({label:'Stage',detail:reply.text}); updateMessage(reply); },
-    tool(data) { if (!['started','finished','failed'].includes(data.status)) return; reply.activity.push({label:data.status==='started'?'Using tool':data.status==='finished'?'Verified':'Tool unavailable',detail:data.status==='finished'?`${data.tool} · Tool result returned`:data.tool}); updateMessage(reply); },
+    tool(data) { if (!['started','finished','failed'].includes(data.status)) return; reply.activity.push({label:data.status==='started'?'Using tool':data.status==='finished'?'Tool result returned':'Tool unavailable',detail:data.status==='finished'?`${data.tool} · Tool result returned`:data.tool}); updateMessage(reply); },
     connection(text) { $('#composer-note').textContent = text; },
     final(data) { completeReply(reply,data); },
     error(message) { failReply(reply,message); },
@@ -124,6 +124,8 @@ export function initChat() {
   $('#image-file').onchange = () => { const file=$('#image-file').files[0]; if (!file) return; try { validateImage(file); image=file; $('#attachment span').textContent=file.name; $('#attachment').hidden=false; notice(); } catch(error) { clearImage(); notice(error.message); } };
   $('#remove-image').onclick = clearImage;
   renderHistory();
+  if(account)loadDurableHistory();
+  const requested=new URLSearchParams(location.search).get('conversation');if(requested && account)openDurableConversation(requested);
   const pending=storage.read(pendingKey), conversation=history.find(c=>c.id===pending?.localId);
   if (conversation && pending?.runId) { Object.assign(state,{localId:conversation.id,conversationId:conversation.conversationId,messages:conversation.messages}); setMode(conversation.mode); renderAll(); const reply=state.messages.find(m=>m.id===pending.replyId); if(reply) { setBusy(true); follow(pending.runId,reply); } }
 }
@@ -169,4 +171,13 @@ export function renderAnswer(container, text) {
     else{list=null;const heading=line.match(/^#{1,4}\s+(.+)/);const paragraph=element(heading?'h3':'p');inline(paragraph,heading?heading[1]:line);container.append(paragraph);}
   }
   if(sources.size){const cards=element('div','source-links');for(const [url,host] of sources){const zomato=host==='zomato.com'||host.endsWith('.zomato.com');const button=link(zomato?'Open on Zomato ↗':`Open ${host} ↗`,url);button.className='source-link'+(zomato?' zomato':'');cards.append(button);}container.append(cards);}
+}
+
+async function loadDurableHistory(){
+  try{const data=await request('/marketplace/history/conversations');for(const entry of data.conversations){if(!history.some(item=>item.conversationId===entry.id))history.push({id:entry.id,conversationId:entry.id,mode:'Service',messages:[],title:entry.title});}renderHistory();
+    for(const button of $('#history-list').children){const item=history.find(item=>item.title===button.textContent);if(item && !item.messages.length)button.onclick=()=>openDurableConversation(item.conversationId);}
+  }catch{}
+}
+export async function openDurableConversation(id){
+  try{const data=await request(`/marketplace/conversations/${encodeURIComponent(id)}`);state.conversationId=id;state.localId=id;state.messages=data.messages.map(item=>({id:item.id,role:item.role,text:item.content,activity:[]}));renderAll();emit('service-response',{conversationId:id});}catch(error){notice(error.message);}
 }

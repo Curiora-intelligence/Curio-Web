@@ -26,7 +26,7 @@ export function watchRun(id, callbacks) {
   }
   if (!('EventSource' in window)) { fallback(); return stop; }
   try {
-    source = new EventSource(runUrl(id, true));
+    source = new EventSource(runUrl(id, true),{withCredentials:true});
     source.onopen = () => { errors = 0; clearTimeout(reconnectTimer); };
     for (const kind of ['run_started','stage','tool_started','tool_finished','tool_failed','final','error','done']) {
       source.addEventListener(kind, (event) => {

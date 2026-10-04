@@ -1,3 +1,5 @@
+import {initAuth} from './auth.js';
+initAuth();
 import {$, userId, element} from './config.js';
 import {websocketUrl, listMemories} from './api.js';
 import {captureJPEG, AudioMeter} from './live.js';

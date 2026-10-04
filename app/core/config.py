@@ -17,4 +17,4 @@ class Settings:
             parsed = urlsplit(value)
             if parsed.scheme not in schemes or not parsed.netloc or parsed.username or parsed.password or parsed.query or parsed.fragment:
                 raise ValueError('Configure an absolute HTTP/WS base URL without credentials, query or fragment.')
-        return {'apiBase': self.api_base, 'wsBase': self.ws_base}
+        return {'apiBase': self.api_base, 'wsBase': self.ws_base, 'development': os.getenv('CURIO_INTERFACE_DEVELOPMENT','false')=='true', 'tileUrl': os.getenv('CURIO_TILE_URL','https://tile.openstreetmap.org/{z}/{x}/{y}.png')}
