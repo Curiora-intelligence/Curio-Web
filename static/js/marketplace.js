@@ -1,7 +1,7 @@
 import {account,config,$,element as el} from './config.js';
 import {request,jsonPost} from './api.js';
 import {initAuth} from './auth.js';
-let currentRequirement={category:'plumbing',radius_km:5,availability:'any'},selected=new Set(),map=null,layers=null;
+let currentRequirement={category:'plumbing',radius_km:5,availability:'any'},selected=new Set(),map=null,layers=null,formSequence=0;
 const money=value=>`₹${Number(value).toLocaleString('en-IN')}`;
 const stamp=value=>new Date(value).toLocaleString();
 function error(message){const node=$('#marketplace-error')||$('#notice');if(node){node.textContent=message;node.hidden=!message;}}
@@ -9,7 +9,8 @@ async function guard(operation){try{error('');return await operation();}catch(e)
 function button(text,operation,style='secondary'){const node=el('button',style,text);node.type='button';node.onclick=()=>guard(async()=>{node.disabled=true;try{await operation();}finally{node.disabled=false;}});return node;}
 function card(title,text){const node=el('article','service-card');node.append(el('h3','',title));if(text)node.append(el('p','',text));return node;}
 function field(form,name,label,value='',type='text',choices=null){
-  const wrapper=el('label','field-label',label),input=choices?el('select','input'):el('input','input');input.name=name;input.setAttribute('aria-label',label);input.id=`${form.id||'form'}-${name}`;
+  if(!form.getAttribute('id'))form.setAttribute('id',`service-form-${++formSequence}`);
+  const wrapper=el('label','field-label',label),input=choices?el('select','input'):el('input','input');input.name=name;input.setAttribute('aria-label',label);input.id=`${form.getAttribute('id')}-${name}`;
   if(choices)for(const option of choices){const node=el('option','',option.label??option);node.value=option.value??option;input.append(node);}
   else input.type=type;
   if(type==='checkbox')input.checked=!!value;else input.value=value??'';
@@ -99,7 +100,7 @@ async function adminPage(host){if(account.role!=='ADMIN')throw Error('An admin a
 }
 export function initChatServices(){
   if(!account)return;document.addEventListener('service-response',event=>guard(async()=>{const host=$('#service-chat-results');if(!host)return;const pending=(await request('/marketplace/actions')).actions;host.replaceChildren();for(const action of pending)host.append(button('Review exact service action',()=>showAction(action)));
-    const task=(await request('/marketplace/tasks/'+event.detail.conversationId)).task;if(task?.requirement.category && task.requirement.latitude!=null){const result=await jsonPost('/marketplace/search',task.requirement);const results=el('div');renderProviders(results,result.recommendations,task.requirement);host.append(results);const link=el('a','','Refine filters and view map');link.href='/discover';host.append(link);}
+    const result=(await request('/marketplace/recommendations/'+event.detail.conversationId)).result;if(result?.recommendations){const results=el('div');renderProviders(results,result.recommendations,result.requirement);host.append(results);const link=el('a','','Refine filters and view map');link.href='/discover';host.append(link);}
   }));
 }
 const root=$('#marketplace-root');

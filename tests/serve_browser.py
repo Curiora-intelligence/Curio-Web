@@ -27,6 +27,9 @@ async def browser_interview_tests(request: Request):
 
 @app.get('/browser-marketplace-tests',response_class=HTMLResponse)
 async def marketplace_tests(request: Request):
-    html=templates.env.get_template('marketplace.html').render(request=request,config={**Settings().browser_config(),'development':False},page='discover')
+    page=request.query_params.get('page','discover')
+    if page not in {'discover','requests','notifications','history','saved','provider','admin','account'}: page='discover'
+    html=templates.env.get_template('marketplace.html').render(request=request,config={**Settings().browser_config(),'development':False},page=page)
     html=html.replace('<script id="curio-config"','<script src="/__tests/marketplace_setup.js"></script><script id="curio-config"')
-    return html.replace('</body>','<script type="module" src="/__tests/marketplace_checks.js"></script></body>')
+    checks='marketplace_checks.js' if page=='discover' else 'marketplace_portal_checks.js'
+    return html.replace('</body>',f'<script type="module" src="/__tests/{checks}"></script></body>')

@@ -4,7 +4,7 @@ import {request, runForm, validateImage} from './api.js';
 import {watchRun} from './sse.js';
 
 const historyKey = `curio_chats:${userId}`, pendingKey = `curio_pending:${userId}`;
-const stageLabels = {understanding:'Understanding your request…', memory:'Checking relevant context…', perception:'Analyzed image', reasoning:'Working on your request…', tool_execution:'Checking available options…', verification:'Verifying the result…', response:'Preparing response…'};
+const stageLabels = {understanding:'Understanding your request…', memory:'Checking relevant context…', perception:'Analyzed image', confirmation:'Requested exact action confirmation', reasoning:'Working on your request…', tool_execution:'Checking available options…', verification:'Verifying the result…', response:'Preparing response…'};
 const toolLabels = {'memory.search':'Memory search', 'memory.remember':'Save memory', 'services.search':'Service discovery', 'services.explain_match':'Match explanation', 'web.search':'Web search', 'web.open':'Read source', 'web.find':'Find in source'};
 export const state = {conversationId:null, localId:crypto.randomUUID(), messages:[], mode:'Service', busy:false, location:null};
 let image = null, stopWatching = null;
