@@ -1,12 +1,11 @@
 import {speakCurio, cancelCurioSpeech} from './voice.js';
-import {$, emit, modes, notice, element, storage, userId,account} from './config.js';
+import {$, emit, config, notice, element, storage, userId,account} from './config.js';
 import {request, runForm, validateImage} from './api.js';
 import {watchRun} from './sse.js';
 
 const historyKey = `curio_chats:${userId}`, pendingKey = `curio_pending:${userId}`;
 const stageLabels = {understanding:'Understanding your request…', memory:'Checking relevant context…', perception:'Analyzed image', confirmation:'Requested exact action confirmation', reasoning:'Working on your request…', tool_execution:'Checking available options…', verification:'Verifying the result…', response:'Preparing response…'};
-const toolLabels = {'memory.search':'Memory search', 'memory.remember':'Save memory', 'services.search':'Service discovery', 'services.explain_match':'Match explanation', 'web.search':'Web search', 'web.open':'Read source', 'web.find':'Find in source'};
-export const state = {conversationId:null, localId:crypto.randomUUID(), messages:[], mode:'Service', busy:false, location:null};
+export const state = {conversationId:null, localId:crypto.randomUUID(), messages:[], mode:'general', busy:false, location:null};
 let image = null, stopWatching = null;
 const nodes = new Map();
 let history = storage.read(historyKey, []);
@@ -20,19 +19,31 @@ function save() {
   storage.write(historyKey, history); renderHistory();
 }
 function renderHistory() {
-  const list = $('#history-list'); list.replaceChildren();
-  if (!history.length) list.append(element('p','sidebar-empty','A new thought starts a new conversation.'));
-  for (const item of history) {
+  const list = $('#history-list'), query = $('#history-search').value.trim().toLowerCase(); list.replaceChildren();
+  const entries = history.filter(item => String(item.title).toLowerCase().includes(query));
+  if (!entries.length) list.append(element('p','sidebar-empty',query ? 'No matching conversations' : 'No conversations yet'));
+  for (const item of entries) {
     const button = element('button','history-entry',item.title); button.disabled = state.busy;
-    button.onclick = () => { if (state.busy) return; state.localId=item.id; state.conversationId=item.conversationId; state.messages=item.messages; setMode(item.mode); renderAll(); $('#scrim').click(); emit('conversation-changed'); };
+    button.setAttribute('aria-current', String(item.id === state.localId));
+    button.onclick = () => {
+      if (state.busy) return;
+      if (!item.messages.length && item.conversationId && account) { openDurableConversation(item.conversationId); return; }
+      state.localId = item.id; state.conversationId = item.conversationId; state.messages = item.messages;
+      renderAll(); $('#scrim').click(); emit('show-chat'); emit('conversation-changed');
+    };
     list.append(button);
   }
 }
+function updateComposer() { $('#send').disabled = state.busy || (!$('#message').value.trim() && !image); }
 export function setBusy(busy) {
-  state.busy = busy; $('#send').disabled = busy; $('#new-chat').disabled = busy; $('#open-live').disabled = busy;
+  state.busy = busy; updateComposer(); $('#new-chat').disabled = busy; $('#open-live').disabled = busy;
   $('#message').setAttribute('aria-busy', String(busy));
-  for (const button of document.querySelectorAll('.mode-tabs button, #interview-toggle, .history-entry')) button.disabled = busy;
-  $('#composer-note').textContent = busy ? 'Local inference can take a little time. You can keep writing while Curio works.' : 'A conversation that can carry forward. By Curiora.';
+  for (const button of document.querySelectorAll('.history-entry')) button.disabled = busy;
+  $('#composer-note').textContent = busy ? 'Curio is working. You can keep writing.' : '';
+}
+function syncConversation() {
+  const empty = !state.messages.length;
+  $('#welcome').hidden = !empty; $('#chat-stage').classList.toggle('empty',empty); $('#chat-panel').classList.toggle('empty',empty);
 }
 function renderActivity(message, node) {
   const container = node.querySelector('.message-activity'); container.replaceChildren();
@@ -59,26 +70,19 @@ function updateMessage(message) {
 export function addMessage(role, text, pending = false) {
   const message = {id:crypto.randomUUID(),role,text,pending,activity:[]}; state.messages.push(message);
   const node = $('#message-template').content.firstElementChild.cloneNode(true); nodes.set(message.id,node); $('#messages').append(node); updateMessage(message);
-  $('#page-label').textContent = 'Your conversation'; $('#welcome').hidden = true; $('#chat-stage').classList.remove('empty');
-  node.scrollIntoView({behavior:'smooth',block:'end'}); return message;
+  $('#page-label').textContent = 'Your conversation'; syncConversation();
+  requestAnimationFrame(() => { $('#chat-stage').scrollTop = $('#chat-stage').scrollHeight; }); return message;
 }
 function renderAll() {
   $('#messages').replaceChildren(); nodes.clear();
   for (const message of state.messages) { const node=$('#message-template').content.firstElementChild.cloneNode(true); nodes.set(message.id,node); $('#messages').append(node); updateMessage(message); }
-  $('#welcome').hidden = !!state.messages.length; $('#chat-stage').classList.toggle('empty',!state.messages.length);
+  syncConversation();
   $('#page-label').textContent = state.messages.length ? 'Your conversation' : 'A fresh conversation'; renderHistory();
-}
-export function setMode(mode) {
-  state.mode = modes[mode] ? mode : 'Personal';
-  for (const button of document.querySelectorAll('.mode-tabs button')) { const selected = button.dataset.mode === state.mode || (state.mode === 'Interview' && button.dataset.mode === 'Career'); button.classList.toggle('selected',selected); button.setAttribute('aria-pressed',String(selected)); }
-  $('#interview-toggle').hidden = !['Career','Interview'].includes(state.mode);
-  $('#interview-toggle').textContent = state.mode === 'Interview' ? 'Mock interview selected ✓' : 'Practice a mock interview ↗';
-  emit('mode-changed', modes[state.mode]);
 }
 export function completeReply(reply, data) {
   if (typeof data.answer !== 'string' || !data.conversation_id || data.user_id !== userId) { failReply(reply, 'Curio returned an incomplete response. Reopen this chat to check again.'); return; }
   reply.text = data.answer; reply.pending = false; reply.error = false; state.conversationId = data.conversation_id;
-  updateMessage(reply); save(); storage.remove(pendingKey); setBusy(false); emit('memory-refresh'); emit('service-response',{conversationId:state.conversationId}); speakCurio(data.answer,{defaultOn:state.mode==='Interview'});
+  updateMessage(reply); save(); storage.remove(pendingKey); setBusy(false); emit('memory-refresh'); speakCurio(data.answer);
 }
 export function failReply(reply, message) { reply.text=message; reply.pending=false; reply.error=true; updateMessage(reply); save(); storage.remove(pendingKey); setBusy(false); }
 function follow(id, reply) {
@@ -107,29 +111,41 @@ async function accept(form, reply) {
   }
 }
 export function initChat() {
+  try {
+    const draft = JSON.parse(sessionStorage.getItem('curio_signin_draft'));
+    sessionStorage.removeItem('curio_signin_draft');
+    if (draft?.userId === userId) {
+      $('#message').value = String(draft.chat || '').slice(0,16000);
+      $('#work-message').value = String(draft.work || '').slice(0,16000);
+      for (const id of ['#message','#work-message']) $(id).dispatchEvent(new Event('input'));
+    }
+  } catch { /* Optional session storage must not prevent initialization. */ }
   $('#chat-form').onsubmit = (event) => {
-    event.preventDefault(); if (state.busy) return; cancelCurioSpeech();
+    event.preventDefault(); if (state.busy) return;
+    if (!account && !config.development) { emit('auth-required'); return; }
+    cancelCurioSpeech(); emit('stop-dictation');
     const text=$('#message').value.trim(); if (!text && !image) return;
-    const form=runForm({text, image, conversationId:state.conversationId, mode:modes[state.mode], location:state.location, requestId:crypto.randomUUID()});
+    const form=runForm({text, image, conversationId:state.conversationId, mode:'general', location:state.location, requestId:crypto.randomUUID()});
     addMessage('user',text + (image ? `\n[Image: ${image.name}]` : '')); const reply=addMessage('assistant','Connecting to Curio…',true);
-    $('#message').value=''; clearImage(); accept(form,reply);
+    $('#message').value=''; $('#message').dispatchEvent(new Event('input')); clearImage(); accept(form,reply);
   };
   $('#message').onkeydown = (event) => { if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); $('#chat-form').requestSubmit(); } };
-  $('#new-chat').onclick = () => { if (state.busy) return; stopWatching?.(); state.conversationId=null; state.localId=crypto.randomUUID(); state.messages=[]; $('#message').value=''; clearImage(); notice(); renderAll(); emit('conversation-changed'); emit('memory-refresh'); $('#scrim').click(); $('#message').focus(); };
+  $('#new-chat').onclick = () => { if (state.busy) return; stopWatching?.(); state.conversationId=null; state.localId=crypto.randomUUID(); state.messages=[]; $('#message').value=''; $('#message').dispatchEvent(new Event('input')); clearImage(); notice(); renderAll(); emit('show-chat'); emit('conversation-changed'); emit('memory-refresh'); $('#scrim').click(); $('#message').focus(); };
   $('#history-button').onclick = () => { $('#history-list').scrollIntoView({block:'nearest'}); };
-  for (const button of document.querySelectorAll('.mode-tabs button')) button.onclick = () => { if (!state.busy) setMode(button.dataset.mode); };
-  $('#interview-toggle').onclick = () => { window.location.href='/interview'; };
-  for (const button of document.querySelectorAll('[data-prompt]')) button.onclick = () => { if(state.busy) return; setMode(button.dataset.mode); $('#message').value=button.dataset.prompt; $('#message').focus(); };
+  $('#history-search').addEventListener('input',renderHistory);
+  $('#message').addEventListener('input',updateComposer);
+  for (const button of document.querySelectorAll('[data-prompt]')) button.onclick = () => { if(state.busy) return; $('#message').value=button.dataset.prompt; $('#message').dispatchEvent(new Event('input')); $('#message').focus(); };
   $('#attach-image').onclick = () => $('#image-file').click();
-  $('#image-file').onchange = () => { const file=$('#image-file').files[0]; if (!file) return; try { validateImage(file); image=file; $('#attachment span').textContent=file.name; $('#attachment').hidden=false; notice(); } catch(error) { clearImage(); notice(error.message); } };
+  $('#image-file').onchange = () => { const file=$('#image-file').files[0]; if (!file) return; try { validateImage(file); image=file; $('#attachment span').textContent=file.name; $('#attachment').hidden=false; updateComposer(); notice(); } catch(error) { clearImage(); notice(error.message); } };
   $('#remove-image').onclick = clearImage;
   renderHistory();
   if(account)loadDurableHistory();
-  const requested=new URLSearchParams(location.search).get('conversation');if(requested && account)openDurableConversation(requested);
   const pending=storage.read(pendingKey), conversation=history.find(c=>c.id===pending?.localId);
-  if (conversation && pending?.runId) { Object.assign(state,{localId:conversation.id,conversationId:conversation.conversationId,messages:conversation.messages}); setMode(conversation.mode); renderAll(); const reply=state.messages.find(m=>m.id===pending.replyId); if(reply) { setBusy(true); follow(pending.runId,reply); } }
+  if (conversation && pending?.runId) { Object.assign(state,{localId:conversation.id,conversationId:conversation.conversationId,messages:conversation.messages}); renderAll(); const reply=state.messages.find(m=>m.id===pending.replyId); if(reply) { setBusy(true); follow(pending.runId,reply); } }
+  const requested=new URLSearchParams(location.search).get('conversation'); if (requested && account && !state.busy) openDurableConversation(requested);
+  updateComposer();
 }
-function clearImage() { image=null; $('#image-file').value=''; $('#attachment').hidden=true; }
+function clearImage() { image=null; $('#image-file').value=''; $('#attachment').hidden=true; updateComposer(); }
 
 // Safe, small Markdown renderer. Source buttons never open automatically.
 export function renderAnswer(container, text) {
@@ -170,14 +186,27 @@ export function renderAnswer(container, text) {
     if(bullet){if(!list){list=element('ul');container.append(list);}const item=element('li');inline(item,bullet[1]);list.append(item);}
     else{list=null;const heading=line.match(/^#{1,4}\s+(.+)/);const paragraph=element(heading?'h3':'p');inline(paragraph,heading?heading[1]:line);container.append(paragraph);}
   }
-  if(sources.size){const cards=element('div','source-links');for(const [url,host] of sources){const zomato=host==='zomato.com'||host.endsWith('.zomato.com');const button=link(zomato?'Open on Zomato ↗':`Open ${host} ↗`,url);button.className='source-link'+(zomato?' zomato':'');cards.append(button);}container.append(cards);}
+  if(sources.size){const cards=element('div','source-links');for(const [url,host] of sources){const button=link(`Open ${host} ↗`,url);button.className='source-link';cards.append(button);}container.append(cards);}
 }
 
-async function loadDurableHistory(){
-  try{const data=await request('/marketplace/history/conversations');for(const entry of data.conversations){if(!history.some(item=>item.conversationId===entry.id))history.push({id:entry.id,conversationId:entry.id,mode:'Service',messages:[],title:entry.title});}renderHistory();
-    for(const button of $('#history-list').children){const item=history.find(item=>item.title===button.textContent);if(item && !item.messages.length)button.onclick=()=>openDurableConversation(item.conversationId);}
-  }catch{}
+async function loadDurableHistory() {
+  try {
+    // This existing backend route also owns general conversations; keep its contract.
+    const data = await request('/marketplace/history/conversations');
+    for (const entry of data.conversations || []) {
+      if (!history.some(item => item.conversationId === entry.id)) history.push({id:entry.id,conversationId:entry.id,mode:'general',messages:[],title:entry.title});
+    }
+    renderHistory();
+  } catch { /* Browser-local conversations remain available offline. */ }
 }
-export async function openDurableConversation(id){
-  try{const data=await request(`/marketplace/conversations/${encodeURIComponent(id)}`);state.conversationId=id;state.localId=id;state.messages=data.messages.map(item=>({id:item.id,role:item.role,text:item.content,activity:[]}));renderAll();emit('service-response',{conversationId:id});}catch(error){notice(error.message);}
+export async function openDurableConversation(id) {
+  if (state.busy) return;
+  setBusy(true); $('#composer-note').textContent = 'Loading conversation…';
+  try {
+    const data = await request(`/marketplace/conversations/${encodeURIComponent(id)}`);
+    state.conversationId = id; state.localId = id;
+    state.messages = data.messages.map(item => ({id:item.id,role:item.role,text:item.content,activity:[]}));
+    renderAll(); emit('show-chat'); emit('conversation-changed'); $('#scrim').click();
+  } catch(error) { notice(error.message); }
+  finally { setBusy(false); }
 }

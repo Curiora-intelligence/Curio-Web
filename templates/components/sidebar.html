@@ -1,11 +1,15 @@
 <aside class="sidebar" id="sidebar" aria-label="Main navigation">
-  <div class="sidebar-brand"><a class="brand" href="/" aria-label="Curio home"><img src="{{ url_for('static', path='img/curio.svg') }}" alt="">curio<span class="brand-dot">.</span></a></div>
-  <button class="new-chat" id="new-chat">＋ New Chat <span>fresh start</span></button>
-  <button class="nav-item active" id="history-button">◷ <span>History</span></button>
-  <button class="nav-item" id="memories-button">◇ <span>Memories</span></button>
-  <button class="nav-item" id="discovery-button">⌕ <span>Discover</span></button>
-  <a class="nav-item interview-link" href="/interview">◉ <span>Mock Interview</span><span class="badge">NEW</span></a>
-  <nav class="service-links"><a href="/discover">Services & map</a><a href="/saved">Saved</a><a href="/requests">Requests</a><a href="/notifications">Notifications</a><a href="/history">Durable history</a><a href="/account">Account</a><a href="/provider" data-role="PROVIDER" hidden>Provider portal</a><a href="/admin" data-role="ADMIN" hidden>Admin</a></nav>
-  <p class="history-label">RECENT · THIS BROWSER</p><div id="history-list"><p class="sidebar-empty">A new thought starts<br>a new conversation.</p></div>
-  <div class="sidebar-bottom"><div class="continuity"><span class="blue-dot"></span>A fresh chat. The same you.<p>What matters can stay with you.</p></div><div class="profile"><span class="avatar">S</span><div><strong>Your personal space</strong><small id="profile-id">Your account</small></div><button class="icon-button" id="settings-button" aria-label="Settings">⚙</button></div></div>
+  <div class="sidebar-header">
+    <a class="brand" href="/" aria-label="Curio home"><img src="{{ url_for('static', path='img/curio.svg') }}" alt="" width="28" height="28">curio<span class="brand-dot">.</span></a>
+    <div class="sidebar-tools"><button class="icon-button" id="search-button" aria-label="Search conversations" aria-controls="history-search-box" aria-expanded="false">{{ icon('search',18) }}</button><button class="icon-button" id="collapse-sidebar" aria-label="Collapse navigation">{{ icon('panel',18) }}</button></div>
+  </div>
+  <nav class="primary-nav" aria-label="Curio">
+    <button class="nav-item new-chat" id="new-chat">{{ icon('edit') }}<span>New chat</span></button>
+    <button class="nav-item" id="history-button">{{ icon('clock') }}<span>History</span></button>
+    <button class="nav-item" id="memories-button">{{ icon('memory') }}<span>Memories</span></button>
+  </nav>
+  <div class="history-search" id="history-search-box" hidden><label class="sr-only" for="history-search">Search conversations</label><input class="input" id="history-search" type="search" placeholder="Search conversations" autocomplete="off"></div>
+  <p class="history-label" id="history-heading">Recents</p>
+  <div class="sidebar-history" id="history-list" role="region" aria-labelledby="history-heading"><p class="sidebar-empty">No conversations yet</p></div>
+  <div class="sidebar-footer"><button class="profile" id="settings-button" aria-label="Open settings"><span class="avatar" aria-hidden="true">C</span><span class="profile-copy"><strong id="profile-name">Your space</strong><small id="profile-id">Checking identity</small></span>{{ icon('settings',18) }}</button></div>
 </aside>

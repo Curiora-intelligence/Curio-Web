@@ -1,67 +1,51 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="app">
+<div class="app" id="app">
   {% include 'components/sidebar.html' %}
-  <button class="scrim" id="scrim" aria-label="Close navigation"></button>
-  <main class="main">
-    <header class="topbar"><button class="icon-button mobile-menu" id="menu" aria-label="Open navigation">☰</button>
-      <div>Personal space <span class="slash">/</span> <span class="muted" id="page-label">A fresh conversation</span>
-      </div><button class="status-pill" id="connection-status" title="Check Curio connection">Connecting to
-        Curio</button>
+  <button class="scrim" id="scrim" aria-label="Close navigation" tabindex="-1" hidden></button>
+  <main class="main" id="main">
+    <header class="topbar">
+      <div class="top-left">
+        <button class="icon-button sidebar-open-button" id="menu" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">{{ icon('panel') }}</button>
+        <span class="top-wordmark">Curio</span><span id="page-label" class="sr-only">A fresh conversation</span>
+      </div>
+      <div class="mode-switch" role="tablist" aria-label="Workspace">
+        <button id="chat-tab" role="tab" type="button" aria-selected="true" aria-controls="chat-panel">Chat</button>
+        <button id="work-tab" role="tab" type="button" aria-selected="false" aria-controls="work-panel" tabindex="-1">Work</button>
+      </div>
+      <div class="top-right"><button class="connection" id="connection-status" title="Check backend connection" aria-label="Checking backend connection"><span aria-hidden="true" class="connection-dot"></span><span id="connection-label">Connecting</span></button></div>
     </header>
     <div id="notice" class="notice error global-notice" role="status" hidden></div>
-    <section class="chat-stage empty" id="chat-stage" aria-label="Conversation">
-      <div class="welcome" id="welcome"><span class="eyebrow">YOUR WORLD. A LITTLE CLEARER.</span>
-        <div class="orb" aria-hidden="true">
-          <div class="orb-core"></div><i></i><i></i><i></i>
-        </div>
-        <h1>What do you need<br><em>help with?</em></h1>
-        <p>Describe it, show it, or say it. Curio will understand the problem and help you find the right service.</p>
-        <div class="suggestions"><button data-prompt="My tap is leaking. Help me find a plumber today under ₹500." data-mode="Service"><strong>Find help for a problem</strong></button><button data-prompt="I usually prefer highly rated providers and try to stay below ₹500." data-mode="Service"><strong>Remember my service preferences</strong></button><button data-prompt="Who fixed my tap last time?" data-mode="Service"><strong>Continue from my history</strong></button></div>
+    <section id="chat-panel" class="workspace chat-panel empty" role="tabpanel" aria-labelledby="chat-tab">
+      <div class="chat-stage empty" id="chat-stage" tabindex="0" aria-label="Conversation">
+        <div class="welcome" id="welcome"><h1>Where should we begin?</h1></div>
+        <div id="messages" class="messages" role="log" aria-label="Chat messages" aria-live="polite" aria-relevant="additions text"></div>
       </div>
-      <div id="service-chat-results" class="service-chat-results"></div>
-    <div id="messages" class="messages" role="log" aria-label="Chat messages"></div>
+      {% include 'components/composer.html' %}
+      <div class="quick-actions" aria-label="Conversation starters">
+        <button type="button" data-prompt="Help me write or edit a piece of text. Ask me what I am working on.">{{ icon('edit',18) }}<span>Write or edit</span></button>
+        <button type="button" data-prompt="Help me understand a topic. Ask me what I would like to learn.">{{ icon('document',18) }}<span>Understand a topic</span></button>
+        <button type="button" data-prompt="Help me explore an idea and think through its possibilities.">{{ icon('idea',18) }}<span>Explore an idea</span></button>
+      </div>
     </section>
-    {% include 'components/composer.html' %}
+    {% include 'components/work.html' %}
+    <footer class="workspace-footer">Curio can make mistakes. Check important information.</footer>
   </main>
 </div>
 {% include 'components/message.html' %}
 {% include 'components/progress.html' %}
 {% include 'components/memory_panel.html' %}
 {% include 'components/live_modal.html' %}
-<dialog id="settings-dialog" class="dialog">
-  <div class="dialog-header">
-    <h2>Your space</h2><button class="icon-button" data-close="settings-dialog" aria-label="Close settings">×</button>
+<dialog id="settings-dialog" class="dialog" aria-labelledby="settings-title">
+  <div class="dialog-header"><h2 id="settings-title">Settings</h2><button class="icon-button" data-close="settings-dialog" aria-label="Close settings">{{ icon('close') }}</button></div>
+  <p class="helper" id="identity-description"></p>
+  <label class="field-label" for="user-id">Identity</label><input id="user-id" class="input" readonly>
+  <button class="secondary" id="sign-in" type="button" hidden>Sign in</button>
+  <div class="settings-section"><h3>Conversation</h3>
+    <button type="button" id="voice-toggle" class="secondary" aria-pressed="false">Voice replies OFF</button>
+    <label class="check-label"><input id="show-inspector" type="checkbox" checked> Show confirmed activity</label>
+    <p class="helper">Only stages and tool activity reported by Curio are shown.</p>
   </div>
-  <label class="field-label" for="theme-preference">Appearance</label>
-  <select id="theme-preference" class="input" aria-describedby="theme-help">
-    <option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option>
-  </select>
-  <p class="helper" id="theme-help">System follows your device. Your choice is saved in this browser when storage is available.</p>
-  <p class="helper">One identity connects your chats, memories, and Live sessions on this browser.</p><label
-    class="field-label" for="user-id">Account ID</label><input id="user-id" class="input" readonly>
-  <p class="helper">New Chat keeps this identity and your saved memories. Important history is saved to your account.</p><button
-    class="secondary" id="location-button">Use my location</button>
-  <p id="location-status" class="helper">Location is optional. Nearby results need coordinates.</p><label
-    class="row helper"><input id="show-inspector" type="checkbox" checked> Show confirmed activity</label>
-  <p class="helper">Only stages and tool activity reported by Curio appear here.</p>
-</dialog>
-<dialog id="discovery-dialog" class="dialog">
-  <div class="dialog-header">
-    <h2>Find a good fit</h2><button class="icon-button" data-close="discovery-dialog"
-      aria-label="Close discovery">×</button>
-  </div>
-  <p class="helper">Explore a fictional demo catalogue. Curio ranks the matches and provides the reasons.</p>
-  <form id="discovery-form"><label class="field-label" for="category">Looking for</label><select id="category"
-      class="input">
-      <option value="food">Food</option>
-      <option value="plumber">A plumber</option>
-      <option value="shopping">Shopping</option>
-    </select><label class="field-label" for="budget">Maximum budget · ₹</label><input id="budget" class="input"
-      type="number" min="1" placeholder="Optional"><label class="field-label"
-      for="preferences">Preferences</label><input id="preferences" class="input" maxlength="200"
-      placeholder="e.g. spicy chicken biryani"><label class="row helper"><input id="available-today" type="checkbox">
-      Available today</label><button class="primary" type="submit">Find matches</button></form>
-  <div id="discovery-results" aria-live="polite"></div>
+  <p class="helper">Appearance follows your device automatically.</p>
 </dialog>
 {% endblock %}

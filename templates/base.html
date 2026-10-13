@@ -1,29 +1,23 @@
 <!doctype html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#ffffff">
-  <meta name="description"
-    content="Curio — intelligence that understands you, remembers what matters, and helps with what comes next.">
-  <title>Curio · A little more understanding</title>
-  <script src="{{ url_for('static', path='js/theme-init.js') }}"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0e0f11" media="(prefers-color-scheme: dark)">
+  <meta name="description" content="Curio, your AI workspace by Curiora.">
+  <title>Curio · Curiora</title>
   <link rel="icon" href="{{ url_for('static', path='img/curio.svg') }}" type="image/svg+xml">
-  {% for sheet in ['tokens', 'base', 'app', 'chat', 'memory', 'live', 'marketplace'] %}
-  <link rel="stylesheet" href="{{ url_for('static', path='css/' + sheet + '.css') }}">{% endfor %}
-  <link rel="stylesheet" href="{{ url_for('static', path='vendor/leaflet/leaflet.css') }}"><script src="{{ url_for('static', path='vendor/leaflet/leaflet.js') }}"></script>
-{% block extra_head %}{% endblock %}
-  <link rel="stylesheet" href="{{ url_for('static', path='css/materials.css') }}">
+  {% for sheet in ['tokens', 'base', 'materials', 'app', 'chat', 'memory', 'live'] %}
+  <link rel="stylesheet" href="{{ url_for('static', path='css/' + sheet + '.css') }}">
+  {% endfor %}
 </head>
-
 <body>
+  {% from 'components/icons.html' import icon %}
   {% block content %}{% endblock %}
-{% include 'components/auth.html' %}
+  {% include 'components/auth.html' %}
   <script id="curio-config" type="application/json">{{ config | tojson }}</script>
-  <script type="module" src="{{ url_for('static', path='js/theme.js') }}"></script>
-  {% block scripts %}
-  <script type="module" src="{{ url_for('static', path='js/app.js') }}"></script>{% endblock %}
+  <script type="module" src="{{ url_for('static', path='js/app.js') }}"></script>
 </body>
-
 </html>

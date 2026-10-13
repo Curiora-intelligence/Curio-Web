@@ -5,10 +5,17 @@ export const storage = {
   remove(key) { try { localStorage.removeItem(key); } catch { } },
 };
 export let account=null,csrfToken='';
-try {const response=await fetch(`${config.apiBase}/auth/me`,{credentials:'include'});if(response.ok){account=await response.json();csrfToken=account?.csrf||'';}}catch{}
-export const userId=account?.id || (config.development ? (localStorage.getItem('curio_user_id') || 'demo-sai') : 'guest');
-if(config.development){try{localStorage.setItem('curio_user_id',userId);}catch{}}
-export const modes = { Service: 'discovery', Personal: 'general', Food: 'discovery', Shopping: 'shopping', Research: 'general', Career: 'general', Interview: 'interview' };
+const identityController = new AbortController();
+const identityTimeout = setTimeout(() => identityController.abort(), 5000);
+try {
+  const response = await fetch(`${config.apiBase}/auth/me`, {credentials:'include', signal:identityController.signal});
+  if (response.ok) { account = await response.json(); csrfToken = account?.csrf || ''; }
+} catch { /* Offline visitors may compose a draft; the backend still enforces authentication. */ }
+finally { clearTimeout(identityTimeout); }
+let demoId = 'demo-sai';
+try { demoId = localStorage.getItem('curio_user_id') || demoId; } catch { /* Optional browser storage. */ }
+export const userId = account?.id || (config.development ? demoId : 'guest');
+if (config.development) { try { localStorage.setItem('curio_user_id',userId); } catch {} }
 export const $ = (selector) => document.querySelector(selector);
 export const emit = (name, detail) => document.dispatchEvent(new CustomEvent(name, { detail }));
 export function notice(message = '') { $('#notice').textContent = message; $('#notice').hidden = !message; }

@@ -2,7 +2,7 @@ import { $, element } from './config.js';
 import { listMemories } from './api.js';
 
 const categories = { preference: 'Preference', constraint: 'Constraint', goal: 'Goal', skill_gap: 'Skill gap', fact: 'Remembered detail' };
-const labels = { food: 'Food preference', food_preference: 'Food preference', food_budget: 'Food budget', budget: 'Budget', shopping_budget: 'Shopping budget', style: 'Shopping style', shopping_style: 'Shopping style', career: 'Career goal', career_goal: 'Career goal', skill_gap: 'Interview focus' };
+const labels = { food: 'Food preference', food_preference: 'Food preference', food_budget: 'Food budget', budget: 'Budget', shopping_budget: 'Shopping budget', style: 'Shopping style', shopping_style: 'Shopping style', career: 'Career goal', career_goal: 'Career goal', skill_gap: 'Learning focus' };
 let generation = 0;
 export async function refreshMemories() {
   const mine = ++generation, cards = $('#memory-cards');
@@ -15,7 +15,7 @@ export async function refreshMemories() {
     for (const memory of memories) {
       const card = element('article', 'memory-card');
       card.append(element('span', 'memory-category', categories[memory.kind] || 'Remembered detail'));
-      const label = labels[memory.key] || (memory.kind === 'skill_gap' ? 'Interview focus' : String(memory.key || 'About you').replaceAll('_', ' ').replace(/^./, c => c.toUpperCase()));
+      const label = labels[memory.key] || (memory.kind === 'skill_gap' ? 'Learning focus' : String(memory.key || 'About you').replaceAll('_', ' ').replace(/^./, c => c.toUpperCase()));
       const value = /budget/.test(memory.key) && /^\d+(\.\d+)?$/.test(String(memory.value)) ? `₹${Number(memory.value).toLocaleString('en-IN')}` : String(memory.value);
       card.append(element('h3', '', label), element('p', '', value)); cards.append(card);
     }

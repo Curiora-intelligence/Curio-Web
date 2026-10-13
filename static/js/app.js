@@ -1,83 +1,43 @@
-import {initAuth} from './auth.js';
-import {initChatServices} from './marketplace.js';
-import {bindVoiceToggle} from './voice.js';
-import {$, userId,config} from './config.js';
-import {initChat} from './chat.js';
-import {initMemory} from './memory.js';
-import {initLive} from './live.js';
-import {element, notice, storage, emit} from './config.js';
-import {jsonPost, listMemories, request} from './api.js';
-import {state} from './chat.js';
+import {initShell} from './shell.js';
 
-$('#profile-id').textContent = userId;
-$('#user-id').value = userId;
-$('#menu').onclick = () => { $('#sidebar').classList.add('open'); $('#scrim').classList.add('visible'); };
-$('#scrim').onclick = () => { $('#sidebar').classList.remove('open'); $('#scrim').classList.remove('visible'); };
-$('#settings-button').onclick = () => $('#settings-dialog').showModal();
-for (const button of document.querySelectorAll('[data-close]')) button.onclick = () => document.getElementById(button.dataset.close).close();
-initAuth();
-initChat();
-initChatServices();
-initMemory();
-initLive();
-bindVoiceToggle($('#voice-toggle'));
-
-const inspector=storage.read('curio_inspector',true);
-$('#show-inspector').checked=inspector;document.body.classList.toggle('hide-inspector',!inspector);
-$('#show-inspector').onchange=()=>{const enabled=$('#show-inspector').checked;document.body.classList.toggle('hide-inspector',!enabled);storage.write('curio_inspector',enabled);};
-let checking=false;
-async function checkConnection(){
-  if(checking)return;checking=true;const badge=$('#connection-status');
-  try{const health=await request('/health');badge.textContent=health.status==='ok'?'Curio connected':'Curio needs attention';badge.classList.toggle('offline',health.status!=='ok');}
-  catch{badge.textContent='Curio offline';badge.classList.add('offline');}
-  finally{checking=false;}
-}
-$('#connection-status').onclick=checkConnection;checkConnection();
-setInterval(()=>{if(!document.hidden)checkConnection();},30000);
-$('#location-button').onclick=()=>{
-  if(!navigator.geolocation){$('#location-status').textContent='Location is not supported. Curio can still find matches without distance.';return;}
-  $('#location-status').textContent='Waiting for location permission…';
-  navigator.geolocation.getCurrentPosition(position=>{
-    state.location={latitude:position.coords.latitude,longitude:position.coords.longitude};
-    $('#location-status').textContent='Location enabled for this tab. Curio can use it for nearby requests.';
-    $('#location-button').textContent='Update my location';emit('location-changed');
-  },()=>{$('#location-status').textContent='Location was not available. Matches will show distance as unknown.';},{enableHighAccuracy:false,timeout:10000,maximumAge:300000});
-};
-let discoveryBusy=false;
-let discoveryGeneration = 0;
-async function fillDiscoveryDefaults() {
-  const generation = ++discoveryGeneration, category = $('#category').value;
-  $('#budget').value = ''; $('#preferences').value = ''; $('#discovery-results').replaceChildren();
-  try {
-    const {memories} = await listMemories();
-    if (generation !== discoveryGeneration) return;
-    const key = category === 'food' ? 'food_budget' : category === 'shopping' ? 'shopping_budget' : 'budget';
-    const budget = memories.find(m => m.key === key) || memories.find(m => m.key === 'budget');
-    const preference = memories.find(m => m.kind === 'preference' && m.key === (category === 'food' ? 'food' : category === 'shopping' ? 'style' : 'service'));
-    if (budget && /^\d+(\.\d+)?$/.test(budget.value) && !$('#budget').value) $('#budget').value = budget.value;
-    if (preference && !$('#preferences').value) $('#preferences').value = preference.value;
-  } catch { /* Explicit criteria remain usable if memory is offline. */ }
-}
-$('#discovery-button').onclick = () => {
-  if(!config.development){location.href='/discover';return;}
-  $('#discovery-dialog').showModal(); $('#category').value = state.mode === 'Shopping' ? 'shopping' : 'food';
-  fillDiscoveryDefaults();
-};
-$('#category').onchange = fillDiscoveryDefaults;
-$('#discovery-form').onsubmit=async event=>{
-  event.preventDefault();if(discoveryBusy)return;discoveryBusy=true;
-  const results=$('#discovery-results'),button=event.target.querySelector('button[type=submit]');button.disabled=true;results.replaceChildren(element('p','helper','Checking available options…'));
-  const budget=Number($('#budget').value), preferences=$('#preferences').value.trim();
-  try{
-    // Discovery is stateless: identity travels in the common header, never an unsupported JSON field.
-    const data=await jsonPost('/discovery/',{category:$('#category').value,...(budget>0?{budget_max:budget}:{}),preferences:preferences?[preferences]:[],availability:$('#available-today').checked?'today':'any',...(state.location||{})});
-    results.replaceChildren(element('p','helper',data.notice || 'Fictional demo catalogue.'));
-    for(const match of data.recommendations || []){
-      const card=element('article','recommendation');card.append(element('span','badge','Fictional demo'),element('h3','',match.name));
-      const price=Number.isFinite(match.price)?new Intl.NumberFormat('en-IN',{style:'currency',currency:match.currency || 'INR',maximumFractionDigits:0}).format(match.price):'Price unknown';
-      card.append(element('p','price',price));const reasons=element('ul');for(const reason of match.reasons || [])reasons.append(element('li','',reason));card.append(reasons);results.append(card);
+// Shell interactions become ready before authentication or backend requests finish.
+initShell();
+async function start() {
+  const [context, api, chat, memory, live, auth, voice] = await Promise.all([
+    import('./config.js'), import('./api.js'), import('./chat.js'), import('./memory.js'),
+    import('./live.js'), import('./auth.js'), import('./voice.js'),
+  ]);
+  const {$, userId, account, config, storage} = context;
+  $('#profile-name').textContent = account?.name || (config.development ? 'Local demo' : 'Your space');
+  $('#profile-id').textContent = account ? 'Signed in' : config.development ? 'Browser identity · not an account' : 'Not signed in';
+  $('#user-id').value = userId;
+  $('#identity-description').textContent = account ? 'Connected to your Curio account.' : config.development ? 'Development mode uses a browser-local ID. This is not secure authentication.' : 'Sign in to use your Curio account. Your draft stays here while you sign in.';
+  $('#settings-button').onclick = () => $('#settings-dialog').showModal();
+  $('#sign-in').hidden = !!account || config.development;
+  $('#sign-in').onclick = () => { $('#settings-dialog').close(); $('#auth-dialog').showModal(); };
+  auth.initAuth(); chat.initChat(); memory.initMemory(); live.initLive();
+  voice.bindVoiceToggle($('#voice-toggle'));
+  const inspector = storage.read('curio_inspector',true);
+  $('#show-inspector').checked = inspector; document.body.classList.toggle('hide-inspector',!inspector);
+  $('#show-inspector').onchange = () => { const enabled = $('#show-inspector').checked; document.body.classList.toggle('hide-inspector',!enabled); storage.write('curio_inspector',enabled); };
+  let checking = false;
+  async function checkConnection() {
+    if (checking) return; checking = true;
+    const badge = $('#connection-status'); let label, description, connected = false;
+    try { const health = await api.request('/health'); connected = health.status === 'ok'; label = connected ? 'Connected' : 'Check connection'; description = connected ? 'Connected to the Curio backend' : 'The backend needs attention'; }
+    catch { label = 'Offline'; description = 'Curio backend is unavailable. Check the backend connection and retry.'; }
+    finally {
+      badge.classList.toggle('connected',connected); badge.classList.toggle('offline',!connected);
+      $('#connection-label').textContent = label; badge.title = description; badge.setAttribute('aria-label', `${description}. Check again`);
+      checking = false;
     }
-    if(!data.recommendations?.length)results.append(element('p','helper','No matches for those constraints. Try a different budget or category.'));
-  }catch(error){results.replaceChildren(element('p','notice error',error.message));}
-  finally{discoveryBusy=false;button.disabled=false;}
-};
+  }
+  $('#connection-status').onclick = checkConnection; checkConnection();
+  let timer = setInterval(() => { if (!document.hidden) checkConnection(); },30000);
+  window.addEventListener('pagehide', () => clearInterval(timer));
+  window.addEventListener('pageshow', event => { if (event.persisted) { checkConnection(); timer = setInterval(() => { if (!document.hidden) checkConnection(); },30000); } });
+}
+start().catch(() => {
+  const notice = document.querySelector('#notice'); notice.hidden = false;
+  notice.textContent = 'Curio could not initialize. Reload the page to try again.';
+});

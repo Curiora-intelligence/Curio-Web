@@ -1,0 +1,95 @@
+// Presentation state only. Workspace navigation never owns or cancels chat runs.
+export function initShell() {
+  const $ = selector => document.querySelector(selector);
+  const app = $('#app'), sidebar = $('#sidebar'), main = $('#main'), menu = $('#menu');
+  const narrow = matchMedia('(max-width: 760px)');
+  let mobileOpen = false, collapsed = false, returnFocus = menu;
+  function syncSidebar() {
+    const visible = narrow.matches ? mobileOpen : !collapsed;
+    app.classList.toggle('sidebar-collapsed', !narrow.matches && collapsed);
+    sidebar.classList.toggle('open', narrow.matches && mobileOpen);
+    sidebar.inert = !visible;
+    menu.setAttribute('aria-expanded', String(visible));
+    $('#scrim').hidden = !narrow.matches || !mobileOpen;
+    main.inert = narrow.matches && mobileOpen;
+    if (narrow.matches && mobileOpen) { sidebar.setAttribute('role','dialog'); sidebar.setAttribute('aria-modal','true'); }
+    else { sidebar.removeAttribute('role'); sidebar.removeAttribute('aria-modal'); }
+  }
+  function closeSidebar() {
+    if (narrow.matches) mobileOpen = false;
+    else collapsed = true;
+    syncSidebar();
+    menu.focus();
+  }
+  menu.onclick = () => { returnFocus = document.activeElement; if (narrow.matches) mobileOpen = true; else collapsed = false; syncSidebar(); $('#collapse-sidebar').focus(); };
+  $('#collapse-sidebar').onclick = closeSidebar;
+  $('#scrim').onclick = () => { mobileOpen = false; syncSidebar(); if (narrow.matches) returnFocus?.focus(); };
+  document.addEventListener('keydown', event => {
+    if (!narrow.matches || !mobileOpen || document.querySelector('dialog[open]')) return;
+    if (event.key === 'Escape') { event.preventDefault(); closeSidebar(); }
+    if (event.key === 'Tab') {
+      const items = [...sidebar.querySelectorAll('a,button,input')].filter(node => !node.disabled && node.getClientRects().length);
+      const first = items[0], last = items.at(-1);
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    }
+  });
+  narrow.addEventListener('change', () => { mobileOpen = false; syncSidebar(); });
+  syncSidebar();
+
+  function workspace(name, focus = false) {
+    for (const kind of ['chat','work']) {
+      const selected = kind === name;
+      const tab = $(`#${kind}-tab`);
+      tab.setAttribute('aria-selected', String(selected)); tab.tabIndex = selected ? 0 : -1;
+      $(`#${kind}-panel`).hidden = !selected;
+      if (selected && focus) tab.focus();
+    }
+    // Recompute height after a hidden draft returns to the layout.
+    const textarea = name === 'chat' ? $('#message') : $('#work-message');
+    textarea.dispatchEvent(new Event('input'));
+    document.dispatchEvent(new CustomEvent('workspace-changed', {detail:name}));
+  }
+  for (const kind of ['chat','work']) {
+    const tab = $(`#${kind}-tab`);
+    tab.onclick = () => workspace(kind);
+    tab.onkeydown = event => {
+      if (['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) {
+        event.preventDefault(); workspace(event.key === 'Home' ? 'chat' : event.key === 'End' ? 'work' : kind === 'chat' ? 'work' : 'chat', true);
+      }
+    };
+  }
+  document.addEventListener('show-chat', () => workspace('chat'));
+  for (const textarea of document.querySelectorAll('.composer textarea')) {
+    const resize = () => { if (!textarea.getClientRects().length) return; textarea.style.height = 'auto'; textarea.style.height = `${Math.min(textarea.scrollHeight, 180)}px`; };
+    textarea.addEventListener('input', resize);
+    resize();
+  }
+  $('#work-message').addEventListener('input', () => { $('#continue-in-chat').disabled = !$('#work-message').value.trim(); });
+  for (const button of document.querySelectorAll('[data-work-prompt]')) button.onclick = () => {
+    $('#work-message').value = button.dataset.workPrompt;
+    $('#work-message').dispatchEvent(new Event('input')); $('#work-message').focus();
+  };
+  $('#continue-in-chat').onclick = () => {
+    const draft = $('#work-message').value.trim(); if (!draft) return;
+    const chat = $('#message');
+    // Append rather than replace an existing Chat draft. This never submits automatically.
+    const combined = [chat.value.trim(), draft].filter(Boolean).join('\n\n');
+    if (combined.length > chat.maxLength) {
+      $('#notice').textContent = 'The combined draft is too long for Chat. Shorten either draft before continuing.'; $('#notice').hidden = false; return;
+    }
+    chat.value = combined;
+    workspace('chat'); chat.focus();
+  };
+  $('#search-button').onclick = () => {
+    const box = $('#history-search-box'); box.hidden = !box.hidden;
+    $('#search-button').setAttribute('aria-expanded', String(!box.hidden));
+    if (!box.hidden) $('#history-search').focus();
+    else { $('#history-search').value = ''; $('#history-search').dispatchEvent(new Event('input')); }
+  };
+  for (const button of document.querySelectorAll('[data-close]')) button.onclick = () => document.getElementById(button.dataset.close).close();
+  // The visual viewport keeps controls reachable above mobile keyboards.
+  const viewport = window.visualViewport;
+  const resizeViewport = () => { if (viewport && viewport.scale === 1) document.documentElement.style.setProperty('--app-height', `${viewport.height}px`); };
+  viewport?.addEventListener('resize', resizeViewport); resizeViewport();
+}

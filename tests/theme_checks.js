@@ -1,130 +1,19 @@
-/* Development-only browser checks. Run from a same-origin page loading this module.
- * Uses the real / page and assets, but excludes unrelated application modules.
- * Storage and system appearance are isolated per iframe; no user data is changed.
- */
-const report = document.createElement('pre');
-report.id = 'theme-check-results';
-report.style.cssText = 'white-space:pre-wrap;font:14px/1.6 monospace;padding:24px';
-document.body.append(report);
-let passes = 0;
-const ok = (value, label) => {
-  if (!value) throw Error(label);
-  passes++;
-  report.textContent += `PASS ${label}\n`;
-};
-const source = await (await fetch('/')).text();
-let frame;
-async function preview({system = 'light', saved = null, blocked = false, width = 1440} = {}) {
-  frame?.remove();
-  frame = document.createElement('iframe');
-  frame.title = 'Isolated Curio theme test';
-  frame.style.cssText = `display:block;width:${width}px;height:900px;border:0`;
-  const fixture = `<script>
-    window.__errors = [];
-    window.addEventListener('error', e => __errors.push(e.message));
-    const values = new Map(${JSON.stringify(saved === null ? [] : [['curio_theme', saved]])});
-    window.__stored = values;
-    const storage = {getItem:k => values.get(k) ?? null, setItem:(k,v) => values.set(k,String(v)), removeItem:k => values.delete(k)};
-    Object.defineProperty(window, 'localStorage', {configurable:true, get:() => {
-      if (${blocked}) throw new DOMException('Storage blocked','SecurityError'); return storage;
-    }});
-    const media = new EventTarget(); media.matches = ${system === 'dark'};
-    window.matchMedia = () => media;
-    window.__system = dark => {media.matches=dark;media.dispatchEvent(new Event('change'));};
-  <\/script>`;
-  // Retain only the two production theme scripts, not auth/transport or vendor modules.
-  let html = source.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, tag => /js\/theme(?:-init)?\.js/.test(tag) ? tag : '');
-  html = html.replace('<head>', `<head><base href="${location.origin}/">${fixture}`);
-  html = html.replace(/(<script[^>]+theme-init\.js[^>]*><\/script>)/,
-    '$1<script>window.__firstTheme=document.documentElement.dataset.theme; window.__firstBody=document.body;<\/script>');
-  const loaded = new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(Error('Theme preview load timed out')), 10000);
-    frame.onload = () => { clearTimeout(timeout); resolve(); };
-  });
-  frame.srcdoc = html;
-  document.body.append(frame);
-  await loaded;
-  return {win:frame.contentWindow, doc:frame.contentDocument};
+/* Actual templates/modules with CSS-media emulation only on test routes. */
+const report=document.createElement('pre');report.id='theme-results';report.style.cssText='white-space:pre-wrap;font:13px/1.5 monospace';document.body.append(report);
+let passes=0;const ok=(v,label)=>{if(!v)throw Error(label);passes++;report.textContent+=`PASS ${label}\n`;};const pause=ms=>new Promise(r=>setTimeout(r,ms));
+function ratio(a,b){const lum=c=>{const v=c.match(/[\d.]+/g).slice(0,3).map(Number).map(n=>{n/=255;return n<=.04045?n/12.92:((n+.055)/1.055)**2.4;});return v[0]*.2126+v[1]*.7152+v[2]*.0722;};const x=lum(a),y=lum(b);return(Math.max(x,y)+.05)/(Math.min(x,y)+.05);}
+try{
+for(const appearance of ['light','dark'])for(const width of [390,768,1024,1440]){
+ const frame=document.createElement('iframe');frame.title=`${appearance} ${width}px`;frame.style.cssText=`width:${width}px;height:900px;border:0;display:block`;const loaded=new Promise(r=>frame.onload=r);frame.src=`/__test/app?appearance=${appearance}`;document.body.append(frame);await loaded;
+ const win=frame.contentWindow,doc=frame.contentDocument,$=s=>doc.querySelector(s),style=e=>win.getComputedStyle(e);for(let n=0;n<100&&!$('#new-chat').onclick;n++)await pause(20);const prefix=`${appearance} ${width}px`;
+ ok(doc.documentElement.scrollWidth<=width,`${prefix}: no horizontal overflow`);ok(doc.documentElement.scrollHeight<=900,`${prefix}: empty app fits viewport`);
+ const main=$('main').getBoundingClientRect(),tabs=$('.mode-switch').getBoundingClientRect();ok(Math.abs(tabs.x+tabs.width/2-main.x-main.width/2)<1,`${prefix}: centered workspace switch`);
+ ok(ratio(style(doc.body).color,style(doc.documentElement).backgroundColor)>=4.5,`${prefix}: primary text contrast`);ok(ratio(style($('.workspace-footer')).color,style(doc.documentElement).backgroundColor)>=4.5,`${prefix}: secondary text contrast`);ok(style(doc.documentElement).colorScheme===appearance,`${prefix}: native control color scheme`);ok(!$('#theme-preference')&&!$('#theme-toggle'),`${prefix}: no manual theme controls`);
+ const composer=$('.composer').getBoundingClientRect();ok(composer.width<=main.width&&composer.bottom<900,`${prefix}: composer fits`);$('#message').focus();ok(style($('.composer')).boxShadow!=='none',`${prefix}: composer focus treatment`);
+ $('#work-tab').click();ok(!$('#work-panel').hidden&&$('#chat-panel').hidden,`${prefix}: Work switches only workspace`);ok($('#work-panel textarea').getBoundingClientRect().height>60,`${prefix}: taller Work input`);ok(doc.documentElement.scrollWidth<=width,`${prefix}: Work has no overflow`);$('#chat-tab').click();
+ for(const id of ['settings-dialog','memory-dialog','live-dialog','auth-dialog']){const dialog=doc.getElementById(id);dialog.showModal();ok(dialog.getBoundingClientRect().width<=width&&ratio(style(dialog).color,style(dialog).backgroundColor)>=4.5,`${prefix}: ${id} fits and is readable`);dialog.close();}
+ if(width===390){$('#menu').click();ok($('#sidebar').getAttribute('aria-modal')==='true'&&$('main').inert,`${prefix}: drawer isolates background`);doc.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));ok(!$('#sidebar').classList.contains('open')&&!$('main').inert&&doc.activeElement===$('#menu'),`${prefix}: Escape restores focus`);}else{$('#collapse-sidebar').click();ok($('#sidebar').inert&&$('#app').classList.contains('sidebar-collapsed'),`${prefix}: desktop collapse`);$('#menu').click();ok(!$('#sidebar').inert,`${prefix}: desktop restore`);}
+ const rules=[...doc.styleSheets].flatMap(s=>[...s.cssRules]);ok(rules.some(r=>r.conditionText?.includes('prefers-reduced-motion')),`${prefix}: reduced motion loaded`);ok(!win.__errors.length,`${prefix}: no JS errors`);frame.remove();
 }
-function choose(doc, value) {
-  const select = doc.querySelector('#theme-preference');
-  select.value = value;
-  select.dispatchEvent(new frame.contentWindow.Event('change'));
-}
-function contrast(a, b) {
-  const luminance = color => {
-    const values = color.match(/[\d.]+/g).slice(0,3).map(Number).map(n => {
-      n /= 255; return n <= .04045 ? n / 12.92 : ((n + .055) / 1.055) ** 2.4;
-    });
-    return values[0]*.2126 + values[1]*.7152 + values[2]*.0722;
-  };
-  const x=luminance(a), y=luminance(b);
-  return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);
-}
-try {
-  let {win, doc} = await preview({system:'dark'});
-  ok(win.__firstTheme === 'dark' && win.__firstBody === null, 'system theme applied in head before body parsing');
-  ok(doc.documentElement.dataset.themePreference === 'system', 'new visitors follow System');
-  ok(doc.querySelector('meta[name="theme-color"]').content === '#111214', 'dark browser theme-color');
-  win.__system(false);
-  ok(doc.documentElement.dataset.theme === 'light', 'System reacts to device changes');
-  choose(doc, 'dark');
-  ok(win.__stored.get('curio_theme') === 'dark', 'manual selection persists');
-  win.__system(true); win.__system(false);
-  ok(doc.documentElement.dataset.theme === 'dark', 'manual selection ignores device changes');
-  choose(doc, 'system');
-  ok(doc.documentElement.dataset.theme === 'light' && win.__stored.get('curio_theme') === 'system', 'System selection persists and resolves immediately');
-  win.dispatchEvent(new win.StorageEvent('storage', {key:'curio_theme', newValue:'dark'}));
-  ok(doc.documentElement.dataset.theme === 'dark' && doc.querySelector('#theme-preference').value === 'dark', 'cross-tab changes synchronize appearance and selector');
-  win.dispatchEvent(new win.StorageEvent('storage', {key:null, newValue:null}));
-  ok(doc.documentElement.dataset.themePreference === 'system', 'cross-tab storage clear returns to System');
-  win.dispatchEvent(new win.PageTransitionEvent('pagehide'));
-  win.__system(true);
-  ok(doc.documentElement.dataset.theme === 'light', 'pagehide releases the system listener');
-  win.dispatchEvent(new win.PageTransitionEvent('pageshow', {persisted:true}));
-  ok(doc.documentElement.dataset.theme === 'dark', 'back-forward cache restore reconnects theme tracking');
-  win.__system(false);
-  ok(doc.documentElement.dataset.theme === 'light', 'system listener works after restoration');
-  ({win, doc} = await preview({system:'light', saved:'dark'}));
-  ok(win.__firstTheme === 'dark', 'saved dark preference wins before paint on a light system');
-  ({win, doc} = await preview({system:'dark', saved:'light'}));
-  ok(win.__firstTheme === 'light', 'saved light preference wins before paint on a dark system');
-  ({win, doc} = await preview({system:'dark', saved:'invalid'}));
-  ok(win.__firstTheme === 'dark' && doc.documentElement.dataset.themePreference === 'system', 'invalid saved values fall back safely');
-  ({win, doc} = await preview({system:'dark', blocked:true}));
-  choose(doc, 'light');
-  ok(doc.documentElement.dataset.theme === 'light' && !win.__errors.length, 'blocked storage permits an in-memory manual preference');
-
-  for (const theme of ['light','dark']) {
-    for (const width of [390,768,1440]) {
-      ({win, doc} = await preview({saved:theme, width}));
-      const style = element => win.getComputedStyle(element);
-      ok(doc.documentElement.scrollWidth <= width, `${theme} layout has no horizontal overflow at ${width}px`);
-      ok(style(doc.documentElement).colorScheme === theme, `${theme} native controls use the matching color scheme at ${width}px`);
-      const host = doc.querySelector('#messages');
-      host.innerHTML = '<article class="message assistant"><div class="message-label">CURIO</div><div class="message-body"><p>Theme fixture</p><pre class="answer-code">const answer = 42;</pre></div></article><article class="message user"><div class="message-body">User fixture</div></article>';
-      for (const selector of ['.message-body', '.message-label', '.helper', '.answer-code', '.primary', '.input']) {
-        const el=doc.querySelector(selector), st=style(el);
-        let parent=el, bg=st.backgroundColor;
-        while (bg === 'rgba(0, 0, 0, 0)' && parent.parentElement) {parent=parent.parentElement;bg=style(parent).backgroundColor;}
-        ok(contrast(st.color,bg) >= 4.5, `${theme} ${selector} contrast at ${width}px`);
-      }
-      for (const id of ['settings-dialog','memory-dialog','live-dialog','discovery-dialog','auth-dialog']) {
-        const dialog=doc.getElementById(id); if (!dialog) continue;
-        dialog.showModal();
-        ok(contrast(style(dialog).color,style(dialog).backgroundColor) >= 4.5, `${theme} ${id} readable at ${width}px`);
-        ok(dialog.getBoundingClientRect().width <= width, `${theme} ${id} fits ${width}px`);
-        dialog.close();
-      }
-      const rules=[...doc.styleSheets].flatMap(sheet=>[...sheet.cssRules]);
-      ok(rules.some(rule=>rule.conditionText?.includes('prefers-reduced-motion') && rule.cssText.includes('scroll-behavior: auto')), `${theme} reduced-motion rule is present`);
-      ok(!win.__errors.length, `${theme} fixture has no JavaScript errors at ${width}px`);
-    }
-  }
-  frame?.remove();
-  report.textContent += `\n${passes} theme checks passed. Application transport and authentication were not exercised.`;
-  report.dataset.result = 'passed';
-} catch (error) {
-  report.textContent += `\nFAIL ${error.stack}`;
-  report.dataset.result = 'failed';
-}
+const frame=document.createElement('iframe');frame.style.width='1024px';frame.src='/__test/app?appearance=light';const loaded=new Promise(r=>frame.onload=r);document.body.append(frame);await loaded;const doc=frame.contentDocument,win=frame.contentWindow;const media=[...doc.styleSheets].flatMap(s=>[...s.cssRules]).find(r=>r.conditionText==='not all');const before=win.getComputedStyle(doc.documentElement).backgroundColor;media.media.mediaText='all';ok(win.getComputedStyle(doc.documentElement).backgroundColor!==before,'CSS media change immediately updates theme');media.media.mediaText='not all';ok(win.getComputedStyle(doc.documentElement).backgroundColor===before,'CSS media returns to light without reload');frame.remove();report.dataset.result='passed';report.textContent+=`\n${passes} checks passed. OS queries emulated in test-only CSS; no system settings changed.`;
+}catch(error){report.dataset.result='failed';report.textContent+=`\nFAIL ${error.stack}`;}
