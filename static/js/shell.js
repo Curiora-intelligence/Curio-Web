@@ -1,3 +1,5 @@
+import {initTypingPlaceholder} from './placeholder.js';
+
 // Presentation state only. Workspace navigation never owns or cancels chat runs.
 export function initShell() {
   const $ = selector => document.querySelector(selector);
@@ -65,22 +67,12 @@ export function initShell() {
     textarea.addEventListener('input', resize);
     resize();
   }
-  $('#work-message').addEventListener('input', () => { $('#continue-in-chat').disabled = !$('#work-message').value.trim(); });
   for (const button of document.querySelectorAll('[data-work-prompt]')) button.onclick = () => {
     $('#work-message').value = button.dataset.workPrompt;
     $('#work-message').dispatchEvent(new Event('input')); $('#work-message').focus();
   };
-  $('#continue-in-chat').onclick = () => {
-    const draft = $('#work-message').value.trim(); if (!draft) return;
-    const chat = $('#message');
-    // Append rather than replace an existing Chat draft. This never submits automatically.
-    const combined = [chat.value.trim(), draft].filter(Boolean).join('\n\n');
-    if (combined.length > chat.maxLength) {
-      $('#notice').textContent = 'The combined draft is too long for Chat. Shorten either draft before continuing.'; $('#notice').hidden = false; return;
-    }
-    chat.value = combined;
-    workspace('chat'); chat.focus();
-  };
+  $('#dismiss-notice').onclick = () => { $('#notice').hidden = true; };
+  initTypingPlaceholder($('#message'));
   $('#search-button').onclick = () => {
     const box = $('#history-search-box'); box.hidden = !box.hidden;
     $('#search-button').setAttribute('aria-expanded', String(!box.hidden));

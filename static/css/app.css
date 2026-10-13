@@ -1,17 +1,17 @@
 /* Shell geometry. Chat transport and conversation state live in separate modules. */
 .app { display: grid; grid-template-columns: var(--sidebar-width) minmax(0,1fr); height: var(--app-height, 100dvh); min-height: 280px; overflow: hidden; }
-.sidebar { min-width: 0; display: flex; flex-direction: column; gap: 4px; padding: 20px 12px 12px; background: var(--background-sidebar); border-right: 1px solid var(--border-subtle); overflow: hidden; }
+.sidebar { min-width: 0; display: flex; flex-direction: column; gap: 4px; padding: 18px 12px 12px; background: var(--background-sidebar); border-right: 1px solid var(--border-subtle); overflow: hidden; }
 .sidebar-header { display: flex; align-items: center; justify-content: space-between; padding: 0 2px 19px 8px; gap: 8px; }
-.brand { display: inline-flex; align-items: center; gap: 9px; color: var(--text-primary); text-decoration: none; font-size: 23px; font-weight: 650; letter-spacing: -.06em; }
-.brand img { width: 28px; height: 28px; }
+.brand { display: inline-flex; align-items: center; gap: 9px; color: var(--text-primary); text-decoration: none; font-size: 23px; font-weight: 600; letter-spacing: -.05em; }
+.brand img { width: 26px; height: 26px; }
 .brand-dot { color: var(--accent); margin-left: -9px; }
 .sidebar-tools { display: flex; }
 .sidebar-tools .icon-button { width: 32px; height: 36px; }
 .primary-nav { display: grid; gap: 3px; }
 .nav-item { display: flex; align-items: center; gap: 12px; min-height: 42px; padding: 9px 12px; width: 100%; border-radius: var(--radius-md); text-align: left; color: var(--text-secondary); font-size: 13px; }
 .nav-item:hover { background: var(--surface-hover); color: var(--text-primary); }
-.new-chat { color: var(--text-primary); font-weight: 550; margin-bottom: 8px; }
-.history-label { margin: 27px 12px 10px; font-size: 11px; font-weight: 550; color: var(--text-secondary); }
+.new-chat { color: var(--text-primary); font-weight: 500; margin-bottom: 8px; }
+.history-label { margin: 27px 12px 10px; font-size: 11px; font-weight: 500; color: var(--text-secondary); }
 .sidebar-history { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 .history-entry { width: 100%; display: block; text-align: left; min-height: 38px; padding: 9px 12px; border-radius: var(--radius-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; color: var(--text-secondary); }
 .history-entry:hover, .history-entry[aria-current="true"] { background: var(--surface-selected); color: var(--text-primary); }
@@ -24,26 +24,19 @@
 .avatar { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--surface-accent); color: var(--accent-text); font-weight: 600; flex-shrink: 0; }
 .profile-copy { flex: 1; min-width: 0; }
 .profile strong, .profile small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.profile strong { font-size: 12px; font-weight: 550; }
+.profile strong { font-size: 12px; font-weight: 500; }
 .profile small { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
-.profile > svg { color: var(--text-secondary); }
 .main { min-width: 0; min-height: 0; display: flex; flex-direction: column; background: var(--background-primary); }
-.topbar { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); align-items: center; gap: 12px; flex-shrink: 0; height: 76px; padding: 0 24px; }
+.topbar { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); align-items: center; gap: 12px; flex-shrink: 0; height: 72px; padding: 0 24px; }
 .top-left, .top-right { display: flex; align-items: center; min-width: 0; }
 .top-right { justify-content: flex-end; }
-.top-wordmark { font-size: 13px; font-weight: 550; color: var(--text-secondary); }
+.top-wordmark { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
 .mode-switch { display: flex; width: 216px; padding: 4px; border-radius: var(--radius-pill); background: var(--surface-primary); }
 .mode-switch button { flex: 1; min-height: 34px; font-size: 13px; font-weight: 500; border-radius: var(--radius-pill); color: var(--text-secondary); transition: background var(--duration-fast) var(--ease-standard); }
 .mode-switch button[aria-selected="true"] { color: var(--text-primary); background: var(--surface-elevated); box-shadow: var(--shadow-soft), inset 0 1px 0 var(--glass-highlight); }
-.connection { display: flex; align-items: center; gap: 7px; min-height: 40px; color: var(--text-secondary); font-size: 11px; padding: 8px; border-radius: var(--radius-sm); }
-.connection:hover { background: var(--surface-primary); }
-.connection-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--text-secondary); }
-.connection.connected .connection-dot { background: var(--status-success); }
-.connection.offline .connection-dot { background: var(--status-error); }
-.global-notice { margin: 0 24px 8px; flex-shrink: 0; max-height: 20vh; overflow: auto; }
 .workspace { flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; padding: 0 28px; }
 .welcome { text-align: center; }
-.welcome h1 { font-size: clamp(26px,2.3vw,32px); letter-spacing: -.04em; line-height: 1.25; font-weight: 500; margin: 0 0 32px; }
+.welcome h1 { font-size: clamp(26px,2.2vw,30px); letter-spacing: -.035em; line-height: 1.25; font-weight: 500; margin: 0 0 32px; }
 .workspace-footer { flex-shrink: 0; text-align: center; color: var(--text-secondary); font-size: 10px; padding: 12px 16px max(16px, env(safe-area-inset-bottom)); }
 .sidebar-open-button { display: none; }
 .app.sidebar-collapsed { grid-template-columns: 0 minmax(0,1fr); }
@@ -57,10 +50,10 @@
 .work-context p { margin: 0; color: var(--text-secondary); font-size: 11px; }
 .work-context .text-button { font-size: 12px; }
 .work-examples { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; margin-top: 16px; }
-.work-examples button { text-align: left; padding: 18px; border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); }
+.work-examples button { text-align: left; padding: 18px; border: 1px solid var(--border-subtle); border-radius: 16px; }
 .work-examples button:hover { background: var(--surface-primary); }
 .work-examples svg { color: var(--text-secondary); margin-bottom: 18px; }
-.work-examples strong { display: block; font-size: 13px; font-weight: 550; }
+.work-examples strong { display: block; font-size: 13px; font-weight: 500; }
 .work-examples span { display: block; color: var(--text-secondary); font-size: 12px; margin-top: 5px; }
 @media(max-width: 1100px) { :root { --sidebar-width: 246px; } .topbar { padding: 0 18px; } }
 @media(max-width: 760px) {
@@ -71,14 +64,12 @@
   .scrim:not([hidden]) { display: block; position: fixed; inset: 0; background: var(--overlay-background); z-index: 30; }
   .sidebar-open-button, .app.sidebar-collapsed .sidebar-open-button { display: inline-grid; margin: 0; }
   .topbar { height: 68px; padding: env(safe-area-inset-top) 12px 0; gap: 4px; }
-  .top-wordmark, #connection-label { display: none; }
+  .top-wordmark { display: none; }
   .mode-switch { width: 176px; }
   .mode-switch button { min-height: 36px; }
-  .connection { min-width: 40px; justify-content: center; }
   .workspace { padding-inline: max(16px,env(safe-area-inset-left)) max(16px,env(safe-area-inset-right)); }
-  .welcome h1 { font-size: 27px; margin-bottom: 26px; }
+  .welcome h1 { font-size: 26px; margin-bottom: 26px; }
   .workspace-footer { font-size: 10px; padding-top: 8px; }
-  .global-notice { margin-inline: 16px; }
   .work-panel { padding-top: 32px; padding-bottom: 24px; justify-content: flex-start; }
   .work-examples { grid-template-columns: 1fr; gap: 8px; margin-top: 8px; }
   .work-examples button { display: grid; grid-template-columns: 22px 1fr; column-gap: 14px; padding: 13px 16px; }
@@ -86,3 +77,5 @@
 }
 @media(max-height: 620px) { .workspace-footer { display: none; } .work-panel { padding-block: 20px; justify-content: flex-start; } }
 .composer.work-composer textarea { min-height: 114px; }
+.desktop-button { font-size: 12px; min-height: 36px; white-space: nowrap; }
+.desktop-availability { margin: 0 4px; font-size: 11px; color: var(--text-secondary); }

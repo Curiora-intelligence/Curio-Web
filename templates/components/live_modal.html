@@ -1,8 +1,12 @@
-<dialog id="live-dialog" class="dialog live-dialog" aria-labelledby="live-title">
-  <div class="dialog-header"><h2 id="live-title">Curio Live</h2><button class="icon-button" id="close-live" aria-label="Close Curio Live">{{ icon('close') }}</button></div>
-  <p class="helper" id="live-state" role="status">Ready to connect</p>
-  <div class="camera-stage"><video id="camera" autoplay playsinline muted></video><div id="camera-empty">{{ icon('camera',32) }}<p>Share your view with Curio.</p><button class="secondary" id="enable-camera">Enable camera</button></div><span class="camera-caption glass" id="camera-caption" hidden>Local preview · sampled frames only</span></div>
-  <p id="live-observation" class="observation" aria-live="polite">Show Curio something, then ask a question.</p>
-  <form id="live-form" class="live-composer"><label class="sr-only" for="live-message">Ask about what you see</label><textarea id="live-message" class="input" maxlength="16000" rows="2" placeholder="What would you like to understand?"></textarea><div class="row"><button type="button" class="secondary" id="live-microphone" aria-pressed="false">Dictate</button><span class="spacer"></span><button type="submit" class="primary" id="live-send">Send question {{ icon('arrow',16) }}</button></div></form>
-  <div id="live-answer" class="live-answer" aria-live="polite"></div><p class="helper">Camera access is optional. Voice fills the box; you decide when to send.</p>
+<dialog id="live-dialog" class="dialog live-dialog" aria-labelledby="live-title" aria-describedby="speak-description">
+  <div class="dialog-header"><h2 id="live-title">Curio Speak</h2><button class="icon-button" id="close-live" aria-label="Close Curio Speak">{{ icon('close') }}</button></div>
+  <p class="helper" id="speak-description">Dictate a thought, review it, then send. Curio keeps the conversation in your chat.</p>
+  <p class="speak-state" id="live-state" role="status">Ready when you are.</p>
+  <form id="live-form" class="live-composer">
+    <label class="sr-only" for="live-message">Your question for Curio Speak</label>
+    <textarea id="live-message" class="input" maxlength="16000" rows="3" placeholder="What’s on your mind?"></textarea>
+    <div class="row"><button type="button" class="secondary" id="live-microphone" aria-pressed="false">{{ icon('mic',16) }} Dictate</button><span class="spacer"></span><button type="submit" class="primary" id="live-send" disabled>Send question {{ icon('arrow',16) }}</button></div>
+  </form>
+  <div id="live-answer" class="live-answer" aria-live="polite"></div>
+  <p class="helper">Dictation depends on your browser. You can also type. Enable spoken replies in profile settings.</p>
 </dialog>

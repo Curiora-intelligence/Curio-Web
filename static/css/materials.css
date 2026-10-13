@@ -1,5 +1,5 @@
 /* Reading areas stay opaque. Glass is reserved for controls and overlays. */
 .glass { background: var(--surface-primary); border: 1px solid var(--glass-border); box-shadow: var(--shadow-elevated), inset 0 1px 0 var(--glass-highlight); }
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .glass { background: var(--glass-background); -webkit-backdrop-filter: blur(20px) saturate(140%); backdrop-filter: blur(20px) saturate(140%); }
+  .glass { background: var(--glass-background); -webkit-backdrop-filter: blur(28px); backdrop-filter: blur(28px); }
 }

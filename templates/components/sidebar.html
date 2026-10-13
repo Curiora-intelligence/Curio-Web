@@ -1,6 +1,6 @@
 <aside class="sidebar" id="sidebar" aria-label="Main navigation">
   <div class="sidebar-header">
-    <a class="brand" href="/" aria-label="Curio home"><img src="{{ url_for('static', path='img/curio.svg') }}" alt="" width="28" height="28">curio<span class="brand-dot">.</span></a>
+    <a class="brand" href="/" aria-label="Curio home"><img src="{{ url_for('static', path=static_version + '/img/curio.svg') }}" alt="" width="28" height="28">curio<span class="brand-dot">.</span></a>
     <div class="sidebar-tools"><button class="icon-button" id="search-button" aria-label="Search conversations" aria-controls="history-search-box" aria-expanded="false">{{ icon('search',18) }}</button><button class="icon-button" id="collapse-sidebar" aria-label="Collapse navigation">{{ icon('panel',18) }}</button></div>
   </div>
   <nav class="primary-nav" aria-label="Curio">
@@ -11,5 +11,5 @@
   <div class="history-search" id="history-search-box" hidden><label class="sr-only" for="history-search">Search conversations</label><input class="input" id="history-search" type="search" placeholder="Search conversations" autocomplete="off"></div>
   <p class="history-label" id="history-heading">Recents</p>
   <div class="sidebar-history" id="history-list" role="region" aria-labelledby="history-heading"><p class="sidebar-empty">No conversations yet</p></div>
-  <div class="sidebar-footer"><button class="profile" id="settings-button" aria-label="Open settings"><span class="avatar" aria-hidden="true">C</span><span class="profile-copy"><strong id="profile-name">Your space</strong><small id="profile-id">Checking identity</small></span>{{ icon('settings',18) }}</button></div>
+  <div class="sidebar-footer"><button class="profile" id="settings-button" aria-label="Open profile and settings"><span class="avatar" aria-hidden="true">C</span><span class="profile-copy"><strong id="profile-name">Your space</strong><small id="profile-id"></small></span></button></div>
 </aside>

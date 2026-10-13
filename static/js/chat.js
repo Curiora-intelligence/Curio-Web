@@ -14,7 +14,7 @@ history = history.filter(item => item && typeof item.id === "string" && Array.is
 
 function save() {
   if (!state.messages.length) return;
-  const item = {id:state.localId, conversationId:state.conversationId, mode:state.mode, messages:state.messages.slice(-100), title:state.messages.find(m => m.role === 'user')?.text.slice(0,60) || 'Live conversation', updated:Date.now()};
+  const item = {id:state.localId, conversationId:state.conversationId, mode:state.mode, messages:state.messages.slice(-100), title:state.messages.find(m => m.role === 'user')?.text.slice(0,60) || 'Speak conversation', updated:Date.now()};
   history = [item, ...history.filter(c => c.id !== item.id)].slice(0,30);
   storage.write(historyKey, history); renderHistory();
 }

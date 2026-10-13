@@ -18,5 +18,5 @@ export const userId = account?.id || (config.development ? demoId : 'guest');
 if (config.development) { try { localStorage.setItem('curio_user_id',userId); } catch {} }
 export const $ = (selector) => document.querySelector(selector);
 export const emit = (name, detail) => document.dispatchEvent(new CustomEvent(name, { detail }));
-export function notice(message = '') { $('#notice').textContent = message; $('#notice').hidden = !message; }
+export function notice(message = '') { $('#notice-message').textContent = message; $('#notice').hidden = !message; }
 export function element(tag, className, text) { const node = document.createElement(tag); node.className = className || ''; if (text !== undefined) node.textContent = text; return node; }

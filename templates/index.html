@@ -13,9 +13,8 @@
         <button id="chat-tab" role="tab" type="button" aria-selected="true" aria-controls="chat-panel">Chat</button>
         <button id="work-tab" role="tab" type="button" aria-selected="false" aria-controls="work-panel" tabindex="-1">Work</button>
       </div>
-      <div class="top-right"><button class="connection" id="connection-status" title="Check backend connection" aria-label="Checking backend connection"><span aria-hidden="true" class="connection-dot"></span><span id="connection-label">Connecting</span></button></div>
+      <div aria-hidden="true"></div>
     </header>
-    <div id="notice" class="notice error global-notice" role="status" hidden></div>
     <section id="chat-panel" class="workspace chat-panel empty" role="tabpanel" aria-labelledby="chat-tab">
       <div class="chat-stage empty" id="chat-stage" tabindex="0" aria-label="Conversation">
         <div class="welcome" id="welcome"><h1>Where should we begin?</h1></div>

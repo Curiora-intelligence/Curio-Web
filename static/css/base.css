@@ -1,7 +1,7 @@
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; }
 html { background: var(--background-primary); color: var(--text-primary); font-family: var(--font-sans); accent-color: var(--accent); scrollbar-color: var(--scrollbar-thumb) transparent; scrollbar-width: thin; }
-body { font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; font-synthesis: none; }
+body { font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; font-synthesis: none; letter-spacing: -.01em; }
 button, input, textarea, select { font: inherit; color: inherit; }
 button { border: 0; background: none; cursor: pointer; }
 button:disabled { opacity: .45; cursor: not-allowed; }
@@ -34,7 +34,7 @@ input::placeholder, textarea::placeholder { color: var(--text-secondary); opacit
 .dialog { margin: auto; width: min(470px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 28px; overflow: auto; overscroll-behavior: contain; color: var(--text-primary); background: var(--surface-elevated); box-shadow: var(--shadow-dialog); }
 .dialog::backdrop { background: var(--overlay-background); }
 .dialog-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.dialog h2 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -.03em; }
+.dialog h2 { margin: 0; font-size: 22px; font-weight: 500; letter-spacing: -.025em; }
 .dialog .row { margin-top: 20px; }
 .settings-section { border-top: 1px solid var(--border-subtle); margin-top: 24px; padding-top: 8px; }
 .settings-section h3 { font-size: 14px; font-weight: 600; }

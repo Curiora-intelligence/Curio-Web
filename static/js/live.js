@@ -1,147 +1,142 @@
 import {cancelCurioSpeech} from './voice.js';
-import { $, notice } from './config.js';
-import { websocketUrl } from './api.js';
-import { state, setBusy, addMessage, completeReply, failReply, renderAnswer } from './chat.js';
+import {$, emit, userId, config} from './config.js';
+import {websocketUrl} from './api.js';
+import {state, setBusy, addMessage, completeReply, failReply, renderAnswer} from './chat.js';
 
-// Pure frame sizing is shared with the browser checks.
-export function frameSize(width, height, maximum = 1280) {
-  const scale = Math.min(1, maximum / Math.max(width, height));
-  return { width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale)) };
-}
-export async function captureJPEG(video) {
-  if (!video.videoWidth || !video.videoHeight) return null;
-  const canvas = document.createElement('canvas');
-  for (const limit of [1280, 960]) {
-    Object.assign(canvas, frameSize(video.videoWidth, video.videoHeight, limit));
-    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', .6));
-    if (blob && blob.size <= 512 * 1024) {
-      const url = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(blob); });
-      return { jpeg: url.split(',')[1], captured_at: Date.now() / 1000 };
-    }
-  }
-  return null;
-}
-
-let socket = null, configured = false, inFlight = null, interval = 5000, nextFrame = 0, frameTimer = null, cameraStream = null, cameraGeneration = 0, encoding = false, reply = null, recognition = null, recognitionButton = null;
-let connectionTimer = null;
+// Curio Speak uses the existing /live/ws transcript contract. No camera or audio frames.
+let socket = null, configured = false, inFlight = null, reply = null;
+let connectionTimer, backoffTimer, recognition = null, recognitionButton = null;
 function status(text) { $('#live-state').textContent = text; }
-function controls() {
-  $('#live-send').disabled = !configured || !!inFlight;
-  $('#close-live').disabled = false;
+function controls() { $('#live-send').disabled = !configured || !!inFlight || !$('#live-message').value.trim(); }
+function send(payload) {
+  if (socket?.readyState !== WebSocket.OPEN) return false;
+  socket.send(JSON.stringify(payload)); return true;
 }
-function send(payload) { if (socket?.readyState !== WebSocket.OPEN) return false; socket.send(JSON.stringify(payload)); return true; }
-function configure() {
-  configured = false; inFlight = 'configure'; controls();
-  send({ type: 'configure', mode: 'general', ...(state.conversationId ? { conversation_id: state.conversationId } : {}), ...(state.location || {}) });
-}
-async function sampleFrame() {
-  if (document.hidden || !configured || inFlight || encoding || !cameraStream || !$('#live-dialog').open || Date.now() < nextFrame) return;
-  encoding = true; const generation = cameraGeneration;
-  try {
-    const frame = await captureJPEG($('#camera'));
-    if (frame && generation === cameraGeneration && !inFlight && configured && $('#live-dialog').open) {
-      inFlight = 'frame'; controls(); status('Understanding what you showed me…');
-      if (!send({ type: 'frame', ...frame })) { inFlight = null; controls(); }
-    }
-  } catch { status('That frame could not be captured. Trying again shortly.'); }
-  finally { encoding = false; nextFrame = Date.now() + interval; }
-}
-async function enableCamera() {
-  const generation = ++cameraGeneration;
-  $('#enable-camera').disabled = true;
-  try {
-    if (!navigator.mediaDevices?.getUserMedia) throw Error('Camera access needs a supported browser on localhost or HTTPS.');
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } }, audio: false });
-    if (generation !== cameraGeneration || !$('#live-dialog').open) { stream.getTracks().forEach(t => t.stop()); return; }
-    cameraStream?.getTracks().forEach(t => t.stop()); cameraStream = stream; $('#camera').srcObject = stream; await $('#camera').play();
-    $('#camera-empty').hidden = true; $('#camera-caption').hidden = false; nextFrame = 0; status('Curio is observing…'); sampleFrame();
-  } catch (error) {
-    cameraStream?.getTracks().forEach(t => t.stop()); cameraStream = null;
-    $('#live-observation').textContent = error.name === 'NotAllowedError' ? 'Camera access was declined. You can still ask Curio a question. Enable camera access in your browser to try again.' : error.name === 'NotFoundError' ? 'No camera was found. You can still use Live questions.' : error.message;
-  } finally { $('#enable-camera').disabled = false; }
-}
-function showObservation(data) {
-  const observation = data.observation || {};
-  if (observation.unavailable) { $('#live-observation').textContent = 'Curio couldn’t make out that frame. Try better light or another angle.'; return; }
-  const details = [...(observation.objects || []), ...(observation.colors || []), ...(observation.visible_details || [])].slice(0,6);
-  $('#live-observation').textContent = details.length ? `In view: ${details.join(' · ')}` : 'Waiting for a clearer view.';
-  if (observation.visible_text?.length) $('#live-observation').textContent += ` · Visible text: ${observation.visible_text.join(' · ')}`;
+function disconnect() {
+  clearTimeout(connectionTimer); clearTimeout(backoffTimer);
+  const current = socket; socket = null; configured = false; inFlight = null;
+  current?.close(); controls();
 }
 function handle(event) {
   let data; try { data = JSON.parse(event.data); } catch { return; }
-  if (data.type === 'ready') { clearTimeout(connectionTimer); interval = Math.max(5000, Number(data.frame_interval_seconds) * 1000 || 5000); configure(); return; }
-  if (data.type === 'configured') { configured = true; inFlight = null; interval = Math.max(5000, Number(data.frame_interval_seconds) * 1000 || interval); nextFrame = Math.max(nextFrame, Date.now() + interval); status(cameraStream ? 'Curio is observing…' : 'Waiting for your question…'); controls(); return; }
-  if (data.type === 'observation') { showObservation(data); inFlight = null; nextFrame = Date.now() + interval; status('Waiting for your question…'); }
-  if (data.type === 'response') {
-    if (reply) { completeReply(reply, data); reply = null; }
-    renderAnswer($('#live-answer'), data.answer); inFlight = null; nextFrame = Date.now() + interval; status('Waiting for your question…');
+  if (data.type === 'ready') {
+    inFlight = 'configure';
+    send({type: 'configure', mode: 'general', ...(state.conversationId ? {conversation_id: state.conversationId} : {}), ...(state.location || {})});
+  } else if (data.type === 'configured') {
+    clearTimeout(connectionTimer); configured = true; inFlight = null; status('Ready for your question.');
+  } else if (data.type === 'response' && reply) {
+    try {
+      completeReply(reply, data);
+      if (reply.error) status(reply.text);
+      else { renderAnswer($('#live-answer'), data.answer); status('Ready for your next thought.'); }
+    }
+    catch { failReply(reply, 'Curio returned an incomplete response. Check your conversation before trying again.'); status('The response could not be read. Check your chat.'); }
+    reply = null; inFlight = null;
+  } else if (data.type === 'busy') {
+    if (reply) { failReply(reply, 'Curio is busy. Your question was not accepted. Please try again shortly.'); reply = null; }
+    inFlight = 'backoff'; status('Curio is busy. Try your question again in a moment.');
+    const current = socket;
+    backoffTimer = setTimeout(() => { if (socket === current) { inFlight = null; controls(); } }, 5000);
+  } else if (data.type === 'error') {
+    const message = data.message || 'Curio could not answer. Please try again.';
+    status(message); if (reply) { failReply(reply, message); reply = null; } inFlight = null;
   }
-  if (data.type === 'pong') return;
-  if (data.type === 'busy' || data.type === 'frame_skipped') {
-    if (inFlight === 'reason' && reply) { failReply(reply, 'Curio is still busy. Your question was not accepted; please send it again when ready.'); reply = null; }
-    inFlight = 'backoff'; nextFrame = Date.now() + interval; status('Curio is busy. Pausing sampled frames…');
-    const currentSocket = socket; setTimeout(() => { if (socket === currentSocket && inFlight === 'backoff') { inFlight = null; controls(); } }, interval);
-  }
-  if (data.type === 'error') {
-    const message = data.message || 'Curio could not process that event.'; status(message);
-    if (reply) { failReply(reply, message); reply = null; } inFlight = null; nextFrame = Date.now() + interval;
-  }
-  if (!$('#live-dialog').open && !inFlight) { const current = socket; socket = null; current?.close(); configured = false; }
+  if (!$('#live-dialog').open && !inFlight) disconnect();
   controls();
 }
 function connect() {
-  clearTimeout(connectionTimer); configured = false; inFlight = null; controls(); status('Connecting to Curio…');
-  const current = new WebSocket(websocketUrl()); socket = current;
-  connectionTimer = setTimeout(() => { if (!configured && socket === current) { status('Curio is taking too long to connect. Close Live and try again.'); current.close(); } }, 15000);
+  disconnect(); status('Connecting for your conversation…');
+  let current;
+  try { current = new WebSocket(websocketUrl()); }
+  catch { status('Curio Speak could not connect. Close this window and try again.'); return; }
+  socket = current;
+  connectionTimer = setTimeout(() => {
+    if (!configured && socket === current) { disconnect(); status('Curio Speak is taking too long to connect. Close this window and try again.'); }
+  }, 15000);
   current.onmessage = event => { if (socket === current) handle(event); };
-  current.onerror = () => { if (socket === current) status('Curio Live is unavailable. Check the backend connection.'); };
+  current.onerror = () => { if (socket === current) status('Curio Speak is unavailable. Check your connection and try again.'); };
   current.onclose = () => {
-    if (socket !== current) return; clearTimeout(connectionTimer); configured = false; inFlight = null; status('Connection closed. Close Live and reopen to reconnect.');
-    if (reply) { failReply(reply, 'The Live connection closed. This question may have finished on the server; it has not been resent.'); reply = null; } controls();
+    if (socket !== current) return;
+    disconnect(); status('Connection closed. Close this window and reopen Curio Speak to reconnect.');
+    if (reply) { failReply(reply, 'The Speak connection closed. This question may have finished on the server; it has not been resent. Check your history before trying again.'); reply = null; }
   };
 }
 function openLive() {
   if (state.busy) return;
-  $('#live-dialog').showModal(); $('#live-answer').textContent = ''; $('#live-observation').textContent = 'Show Curio something, then ask a question.';
-  connect(); clearInterval(frameTimer); frameTimer = setInterval(sampleFrame, 500);
+  if (userId === 'guest' && !config.development) { emit('auth-required'); return; }
+  stopDictation(); $('#live-dialog').showModal(); $('#live-answer').textContent = ''; connect();
 }
-async function closeLive() {
+function closeLive() {
   const waitingForAnswer = inFlight === 'reason';
-  $('#live-dialog').close(); ++cameraGeneration; clearInterval(frameTimer); clearTimeout(connectionTimer); stopDictation();
-  if (!waitingForAnswer) { const current = socket; socket = null; current?.close(); configured = false; inFlight = null; }
-  cameraStream?.getTracks().forEach(t => t.stop()); cameraStream = null; $('#camera').srcObject = null; $('#camera-empty').hidden = false; $('#camera-caption').hidden = true;
+  $('#live-dialog').close(); stopDictation(); cancelCurioSpeech();
+  // An accepted answer can finish in Chat even after the user closes Speak.
+  if (!waitingForAnswer) disconnect();
 }
-function stopDictation() { const current = recognition; recognition = null; current?.stop(); if (recognitionButton) { recognitionButton.setAttribute('aria-pressed', 'false'); recognitionButton.classList.remove('listening'); } recognitionButton = null; }
+function voiceStatus(message = '') {
+  if ($('#live-dialog').open) { status(message || 'Ready for your question.'); return; }
+  $('#voice-status').textContent = message; $('#voice-status').hidden = !message;
+}
+function stopDictation() {
+  const current = recognition; recognition = null;
+  if (current) { current.onresult = current.onerror = current.onend = null; try { current.stop(); } catch { /* Already ended. */ } }
+  recognitionButton?.setAttribute('aria-pressed', 'false'); recognitionButton?.classList.remove('listening'); recognitionButton = null;
+  emit('dictation-state', false);
+}
 function dictate(target, button) {
   cancelCurioSpeech();
-  if (recognition) { stopDictation(); return; }
+  if (recognition) { stopDictation(); voiceStatus(); return; }
   const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!Recognition) { const message = 'Voice typing is not supported in this browser. You can type your question instead.'; if ($('#live-dialog').open) status(message); else notice(message); return; }
-  const current = new Recognition(); recognition = current; recognitionButton = button; current.lang = navigator.language || 'en-IN'; current.continuous = true; current.interimResults = true;
-  const original = target.value; button.classList.add('listening'); button.setAttribute('aria-pressed', 'true');
-  current.onresult = event => { let text = ''; for (let i = 0; i < event.results.length; i++)text += event.results[i][0].transcript + ' '; target.value = (original + ' ' + text).trim().slice(0, 16000); target.dispatchEvent(new Event('input')); };
-  current.onerror = event => { const message = event.error === 'not-allowed' || event.error === 'service-not-allowed' ? 'Microphone access was declined. You can type your question instead.' : 'Voice typing stopped. You can keep typing or try again.'; if ($('#live-dialog').open) status(message); else notice(message); stopDictation(); };
-  current.onend = () => { if (recognition === current) stopDictation(); };
-  try { current.start(); } catch { stopDictation(); notice('Voice typing could not start. Please try again.'); }
+  if (!Recognition) { voiceStatus('Dictation is unavailable in this browser. You can keep typing.'); return; }
+  const current = new Recognition(); recognition = current; recognitionButton = button;
+  current.lang = navigator.language || 'en-IN'; current.continuous = true; current.interimResults = true;
+  const original = target.value;
+  voiceStatus(); button.classList.add('listening'); button.setAttribute('aria-pressed', 'true'); emit('dictation-state', true);
+  current.onresult = event => {
+    if (recognition !== current) return;
+    let text = ''; for (let i = 0; i < event.results.length; i++) text += event.results[i][0].transcript + ' ';
+    target.value = (original + ' ' + text).trim().slice(0, 16000); target.dispatchEvent(new Event('input'));
+  };
+  current.onerror = event => {
+    if (recognition !== current) return;
+    stopDictation();
+    if (['aborted', 'no-speech'].includes(event.error)) { voiceStatus(); return; }
+    const message = ['not-allowed', 'service-not-allowed'].includes(event.error)
+      ? 'Microphone access was declined. Allow it in browser settings to dictate, or keep typing.'
+      : event.error === 'audio-capture' ? 'No microphone is available. Check your device or keep typing.'
+      : 'Dictation is unavailable right now. Try again or keep typing.';
+    voiceStatus(message);
+  };
+  current.onend = () => { if (recognition === current) { stopDictation(); voiceStatus(); } };
+  try { current.start(); } catch { stopDictation(); voiceStatus('Dictation could not start. Try again or keep typing.'); }
 }
 export function initLive() {
   document.addEventListener('stop-dictation', stopDictation);
-  document.addEventListener('workspace-changed', stopDictation);
+  document.addEventListener('workspace-changed', () => { stopDictation(); voiceStatus(); });
   if (!(window.SpeechRecognition || window.webkitSpeechRecognition)) {
-    for (const id of ['#microphone','#live-microphone']) { $(id).disabled = true; $(id).title = 'Dictation is unavailable in this browser'; $(id).setAttribute('aria-label','Dictation is unavailable in this browser'); }
+    for (const id of ['#microphone', '#live-microphone']) { $(id).disabled = true; $(id).title = 'Dictation is unavailable in this browser'; $(id).setAttribute('aria-label', 'Dictation is unavailable in this browser'); }
   }
-  $('#open-live').onclick = openLive; $('#close-live').onclick = closeLive; $('#enable-camera').onclick = enableCamera;
+  $('#open-live').onclick = openLive; $('#close-live').onclick = closeLive;
   $('#live-dialog').addEventListener('cancel', event => { event.preventDefault(); closeLive(); });
-  $('#microphone').onclick = () => dictate($('#message'), $('#microphone')); $('#live-microphone').onclick = () => dictate($('#live-message'), $('#live-microphone'));
-  $('#live-form').onsubmit = async event => {
+  $('#microphone').onclick = () => dictate($('#message'), $('#microphone'));
+  $('#live-microphone').onclick = () => dictate($('#live-message'), $('#live-microphone'));
+  $('#message').addEventListener('input', () => { $('#voice-status').hidden = true; });
+  $('#live-message').addEventListener('input', controls);
+  $('#live-form').onsubmit = event => {
     event.preventDefault(); const text = $('#live-message').value.trim(); if (!text || !configured || inFlight) return;
     inFlight = 'reason'; controls(); stopDictation();
-    addMessage('user', text); reply = addMessage('assistant', 'Considering your question…', true); setBusy(true); status('Reasoning…'); $('#live-answer').textContent = 'Curio is considering your question…';
-    if (!send({ type: 'transcript', text })) { failReply(reply, 'Curio Live is disconnected. Reopen Live and try again.'); reply = null; inFlight = null; controls(); }
+    addMessage('user', text); reply = addMessage('assistant', 'Considering your question…', true); setBusy(true);
+    status('Considering your question…'); $('#live-answer').textContent = '';
+    if (!send({type: 'transcript', text})) { failReply(reply, 'Curio Speak is disconnected. Reopen Speak and try again.'); reply = null; inFlight = null; controls(); }
     else { $('#live-message').value = ''; }
   };
   document.addEventListener('conversation-changed', () => { if ($('#live-dialog').open) closeLive(); });
-  document.addEventListener('visibilitychange', () => { if (document.hidden) { nextFrame = Date.now() + interval; stopDictation(); } });
-  window.addEventListener('pagehide', () => { cameraStream?.getTracks().forEach(t => t.stop()); socket?.close(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) stopDictation(); });
+  window.addEventListener('pagehide', () => {
+    stopDictation();
+    if (reply) {
+      failReply(reply, 'The page left Curio Speak before its answer arrived. This question may have finished on the server; check your history before trying again.');
+      reply = null;
+    }
+    disconnect();
+  });
 }

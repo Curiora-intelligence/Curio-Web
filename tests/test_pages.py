@@ -52,5 +52,41 @@ def test_transport_contracts_retained():
     assert 'lastEventId' in sse and 'runStatus(id)' in sse
     live = (ROOT / 'static/js/live.js').read_text()
     assert "mode: 'general'" in live and "type: 'transcript'" in live
-    assert "inFlight === 'reason'" in live and 'getTracks().forEach' in live
+    assert "inFlight === 'reason'" in live
+    assert 'getUserMedia' not in live and 'captureJPEG' not in live
     assert not re.search(r'interview|marketplace\.js|service-response|mode-tabs', live)
+
+
+def test_versioned_nested_modules_and_cache_policy():
+    from app.core.assets import asset_version
+    version = asset_version()
+    with TestClient(app) as client:
+        page = client.get('/')
+        assert page.headers['cache-control'] == 'no-cache'
+        assert f'/static/{version}/js/app.js' in page.text
+        for file in (ROOT / 'static').rglob('*'):
+            if not file.is_file():
+                continue
+            url = f'/static/{version}/{file.relative_to(ROOT / "static").as_posix()}'
+            asset = client.get(url)
+            assert asset.status_code == 200, url
+            assert 'immutable' in asset.headers['cache-control']
+            cached = client.get(url, headers={'If-None-Match': asset.headers['etag']})
+            assert cached.status_code == 304, url  # Successful cache validation, not a missing resource.
+            assert 'immutable' in cached.headers['cache-control']
+        legacy = client.get('/static/js/app.js')
+        assert legacy.status_code == 200 and legacy.headers['cache-control'] == 'no-cache'
+        assert 'marketplace.js' not in legacy.text
+        assert client.get('/static/js/marketplace.js').status_code == 404  # Intentionally removed.
+        assert client.get('/static/v-old/js/app.js').status_code == 404
+        assert client.get(f'/static/{version}/%2e%2e/main.py').status_code == 404
+
+
+def test_asset_version_changes_with_content(tmp_path):
+    from app.core.assets import asset_version
+    source = tmp_path / 'module.js'
+    source.write_text('export const value = 1;')
+    first = asset_version(tmp_path)
+    assert first == asset_version(tmp_path)
+    source.write_text('export const value = 2;')
+    assert asset_version(tmp_path) != first

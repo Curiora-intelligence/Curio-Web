@@ -4,15 +4,16 @@ Run: uvicorn tests.serve_browser:app --host 127.0.0.1 --port 8018
 """
 import asyncio
 import json
+from hashlib import sha256
 from pathlib import Path
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, FileResponse, StreamingResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
+from app.core.assets import VersionedStaticFiles, asset_version
 from fastapi.templating import Jinja2Templates
 
 ROOT = Path(__file__).resolve().parents[1]
 app = FastAPI()
-app.mount('/static', StaticFiles(directory=ROOT/'static'), name='static')
+app.mount('/static', VersionedStaticFiles(directory=ROOT/'static'), name='static')
 templates = Jinja2Templates(directory=ROOT/'templates')
 runs = {}
 submissions = []
@@ -20,11 +21,11 @@ socket_events = []
 ANSWER = 'Here is a simple starting point.\n\n**Keep the goal clear.** Break the work into small, testable steps.\n\n```python\nprint("Hello, Curio")\n```\n\n| Step | Purpose |\n| --- | --- |\n| Define | Agree on the outcome |\n| Verify | Check what changed |\n\n<script>alert("unsafe")</script>\n[Unsafe](javascript:alert(1))\n\n[Reference](https://example.com)'
 
 @app.get('/__test/setup.js')
-async def setup(): return FileResponse(ROOT/'tests/browser_setup.js', media_type='text/javascript')
+async def setup(): return FileResponse(ROOT/'tests/browser_setup.js', media_type='text/javascript', headers={'Cache-Control':'no-cache'})
 @app.get('/__test/checks.js')
-async def checks(): return FileResponse(ROOT/'tests/browser_checks.js', media_type='text/javascript')
+async def checks(): return FileResponse(ROOT/'tests/browser_checks.js', media_type='text/javascript', headers={'Cache-Control':'no-cache'})
 @app.get('/__test/theme.js')
-async def theme_checks(): return FileResponse(ROOT/'tests/theme_checks.js', media_type='text/javascript')
+async def theme_checks(): return FileResponse(ROOT/'tests/theme_checks.js', media_type='text/javascript', headers={'Cache-Control':'no-cache'})
 
 @app.get('/__test/tokens.css')
 async def theme(appearance: str = 'dark'):
@@ -44,20 +45,23 @@ async def page(request: Request, appearance: str = '', recovery: bool = False):
     if request.url.path == '/__test/appearance':
         from app.core.config import Settings
         config = Settings().browser_config()
-    html = templates.env.get_template('index.html').render(request=request, config=config)
+    html = templates.env.get_template('index.html').render(request=request, config=config, static_version=asset_version())
     if request.url.path != '/__test/appearance':
-        html = html.replace('<head>', '<head><script src="/__test/setup.js"></script>')
+        revision = sha256((ROOT/'tests/browser_setup.js').read_bytes()).hexdigest()[:12]
+        html = html.replace('<head>', f'<head><script src="/__test/setup.js?v={revision}"></script>')
     if appearance in ('light','dark'):
-        html = html.replace(str(request.url_for('static', path='css/tokens.css')), '/__test/tokens.css?appearance='+appearance)
+        html = html.replace(str(request.url_for('static', path=asset_version() + '/css/tokens.css')), '/__test/tokens.css?appearance='+appearance)
     if recovery:
         runs['recovered-run'] = {'answer':'Recovered answer', 'conversation_id':'recovered-conversation','user_id':'fixture-user','status':'completed','message':'recovery'}
     if request.url.path == '/browser-tests':
-        html = html.replace('</body>', '<script type="module" src="/__test/checks.js"></script></body>')
-    return html
+        revision = sha256((ROOT/'tests/browser_checks.js').read_bytes()).hexdigest()[:12]
+        html = html.replace('</body>', f'<script type="module" src="/__test/checks.js?v={revision}"></script></body>')
+    return HTMLResponse(html, headers={'Cache-Control':'no-cache'})
 
 @app.get('/theme-tests', response_class=HTMLResponse)
 async def themes():
-    return '<!doctype html><title>Curio theme and layout checks</title><script type="module" src="/__test/theme.js"></script>'
+    revision = sha256((ROOT/'tests/theme_checks.js').read_bytes()).hexdigest()[:12]
+    return HTMLResponse(f'<!doctype html><title>Curio theme and layout checks</title><script type="module" src="/__test/theme.js?v={revision}"></script>', headers={'Cache-Control':'no-cache'})
 
 @app.get('/__fixtures/auth/me')
 async def identity(): return {'id':'fixture-user','name':'Test account','csrf':'test-csrf'}
