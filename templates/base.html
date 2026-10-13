@@ -4,21 +4,24 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f7f9fc">
+  <meta name="theme-color" content="#ffffff">
   <meta name="description"
     content="Curio — intelligence that understands you, remembers what matters, and helps with what comes next.">
   <title>Curio · A little more understanding</title>
+  <script src="{{ url_for('static', path='js/theme-init.js') }}"></script>
   <link rel="icon" href="{{ url_for('static', path='img/curio.svg') }}" type="image/svg+xml">
   {% for sheet in ['tokens', 'base', 'app', 'chat', 'memory', 'live', 'marketplace'] %}
   <link rel="stylesheet" href="{{ url_for('static', path='css/' + sheet + '.css') }}">{% endfor %}
   <link rel="stylesheet" href="{{ url_for('static', path='vendor/leaflet/leaflet.css') }}"><script src="{{ url_for('static', path='vendor/leaflet/leaflet.js') }}"></script>
 {% block extra_head %}{% endblock %}
+  <link rel="stylesheet" href="{{ url_for('static', path='css/materials.css') }}">
 </head>
 
 <body>
   {% block content %}{% endblock %}
 {% include 'components/auth.html' %}
   <script id="curio-config" type="application/json">{{ config | tojson }}</script>
+  <script type="module" src="{{ url_for('static', path='js/theme.js') }}"></script>
   {% block scripts %}
   <script type="module" src="{{ url_for('static', path='js/app.js') }}"></script>{% endblock %}
 </body>

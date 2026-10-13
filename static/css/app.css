@@ -1,15 +1,10 @@
 :root {
-    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    color: #1c273d;
-    background: #f7f9fc;
+    font-family: var(--font-sans);
+    color: var(--text-primary);
+    background: var(--background-primary);
     font-synthesis: none;
-    --blue: #1470ed;
-    --ink: #1c273d;
-    --muted: #7a8497;
-    --line: #e7ebf2;
-    --soft: #f0f4fa;
-    --danger: #a8394d
 }
+
 
 * {
     box-sizing: border-box
@@ -49,7 +44,7 @@ a:focus-visible {
 }
 
 a {
-    color: var(--blue)
+    color: var(--accent-text)
 }
 
 button {
@@ -80,8 +75,8 @@ p {
 .sidebar {
     width: 256px;
     flex-shrink: 0;
-    background: #f1f4f9;
-    border-right: 1px solid #e7ebf1;
+    background: var(--background-sidebar);
+    border-right: 1px solid var(--border-subtle);
     position: fixed;
     inset: 0 auto 0 0;
     padding: 30px 20px 18px;
@@ -102,7 +97,7 @@ p {
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    font-family: 'Manrope', sans-serif;
+    font-family: var(--font-sans);
     font-size: 29px;
     font-weight: 800;
     letter-spacing: -1.5px
@@ -132,13 +127,13 @@ p {
     justify-content: center;
     width: 36px;
     height: 36px;
-    border-radius: 10px;
-    color: #7c8699;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
     flex-shrink: 0
 }
 
 .icon-button:hover {
-    background: #e9eef6;
+    background: var(--surface-hover);
     color: var(--ink)
 }
 
@@ -146,20 +141,20 @@ p {
     display: flex;
     align-items: center;
     gap: 10px;
-    background: white;
-    border: 1px solid #e1e7ef;
-    border-radius: 11px;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
     padding: 13px 12px;
     font-size: 13px;
     font-weight: 600;
-    box-shadow: 0 2px 3px #172a4910;
+    box-shadow: var(--shadow-soft);
     margin-bottom: 24px
 }
 
 .new-chat span {
     margin-left: auto;
     font-size: 11px;
-    color: #9aa4b5
+    color: var(--text-secondary)
 }
 
 .nav-item {
@@ -170,28 +165,28 @@ p {
     text-align: left;
     padding: 12px 14px;
     font-size: 13px;
-    color: #68758d;
-    border-radius: 10px;
+    color: var(--text-secondary);
+    border-radius: var(--radius-md);
     margin: 4px 0
 }
 
 .nav-item.active {
-    color: #226ed0;
-    background: #e5edf9;
+    color: var(--accent-text);
+    background: var(--surface-accent);
     font-weight: 550
 }
 
 .history-label {
     font-size: 10px;
     letter-spacing: .12em;
-    color: #929db0;
+    color: var(--text-secondary);
     margin: 32px 14px 14px;
     font-weight: 650
 }
 
 .sidebar-empty {
     font-size: 12px;
-    color: #96a0b1;
+    color: var(--text-secondary);
     padding: 0 14px;
     line-height: 1.9
 }
@@ -202,16 +197,16 @@ p {
 
 .continuity {
     font-size: 11px;
-    background: linear-gradient(130deg, #e7edf9, #eef3fa);
+    background: var(--surface-primary);
     padding: 15px;
-    border: 1px solid #e1e8f4;
-    border-radius: 12px;
-    color: #527298
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary)
 }
 
 .continuity p {
     font-size: 11px;
-    color: #8d9bb0;
+    color: var(--text-secondary);
     margin: 7px 0 0 12px
 }
 
@@ -219,11 +214,10 @@ p {
     display: inline-block;
     width: 6px;
     height: 6px;
-    background: #72a6ee;
+    background: var(--accent);
     border-radius: 50%;
     margin-right: 7px;
-    box-shadow: 0 0 0 3px #1470ed09
-}
+    box-shadow: var(--shadow-soft)}
 
 .profile {
     display: flex;
@@ -233,14 +227,14 @@ p {
 }
 
 .avatar {
-    background: #e0e8f6;
-    border: 3px solid #fff;
+    background: var(--surface-primary);
+    border: 3px solid var(--border-subtle);
     width: 36px;
     height: 36px;
     display: grid;
     place-items: center;
     border-radius: 50%;
-    color: #4973b0;
+    color: var(--accent-text);
     font-size: 13px
 }
 
@@ -268,8 +262,7 @@ p {
     display: flex;
     flex-direction: column;
     min-height: 100dvh;
-    background: radial-gradient(ellipse at 52% 31%, #ecf2fd60, transparent 57%)
-}
+    background: var(--background-primary)}
 
 .topbar {
     height: 85px;
@@ -279,11 +272,11 @@ p {
     align-items: center;
     justify-content: space-between;
     font-size: 12px;
-    color: #5b6b82
+    color: var(--text-secondary)
 }
 
 .slash {
-    color: #bbc4d2;
+    color: var(--text-secondary);
     padding: 0 13px
 }
 
@@ -294,12 +287,12 @@ p {
 .status-pill {
     display: flex;
     align-items: center;
-    border: 1px solid #e6ebf4;
-    background: #ffffff80;
+    border: 1px solid var(--border-subtle);
+    background: var(--surface-elevated);
     font-size: 10px;
-    border-radius: 20px;
+    border-radius: var(--radius-lg);
     padding: 8px 12px;
-    color: #8392a6
+    color: var(--text-secondary)
 }
 
 .mobile-menu {
@@ -327,12 +320,12 @@ p {
 .eyebrow {
     font-size: 9px;
     font-weight: 600;
-    color: #8b9bb4;
+    color: var(--text-secondary);
     letter-spacing: .24em
 }
 
 .welcome h1 {
-    font-family: 'Manrope', sans-serif;
+    font-family: var(--font-sans);
     font-weight: 500;
     font-size: clamp(32px, 3.2vw, 48px);
     letter-spacing: -2.2px;
@@ -342,12 +335,12 @@ p {
 
 .welcome h1 em {
     font-style: normal;
-    color: #8a9fbc
+    color: var(--text-secondary)
 }
 
 .welcome>p {
     font-size: 13px;
-    color: #8a95a8;
+    color: var(--text-secondary);
     letter-spacing: .02em
 }
 
@@ -356,21 +349,19 @@ p {
     height: 105px;
     position: relative;
     margin: 33px auto 28px;
-    filter: drop-shadow(0 12px 25px #568cf82a)
-}
+    filter: drop-shadow(0 4px 12px var(--shadow-color))}
 
 .orb-core {
     position: absolute;
     inset: 13px;
     border-radius: 50%;
-    background: radial-gradient(circle at 32% 28%, white 2%, #e6f2ff 20%, #bad2ff 45%, #a2b9f4 62%, #e6ebff 80%);
-    box-shadow: inset -8px -7px 15px #6575d64a, inset 4px 6px 10px #fff
-}
+    background: radial-gradient(circle at 32% 28%, var(--decoration-highlight) 2%, var(--decoration-light) 20%, var(--decoration-mid) 45%, var(--decoration-dark) 62%, var(--decoration-light) 80%);
+    box-shadow: var(--shadow-soft)}
 
 .orb i {
     position: absolute;
     inset: 4px;
-    border: 1px solid #b0c9f882;
+    border: 1px solid var(--border-subtle);
     border-radius: 48%;
     transform: rotate(33deg) scaleX(.82)
 }
@@ -398,16 +389,14 @@ p {
     align-items: center;
     text-align: left;
     padding: 20px 15px;
-    background: #ffffff8a;
-    border: 1px solid #e5ebf5;
-    border-radius: 13px;
-    transition: transform .2s, box-shadow .2s
-}
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    transition: background var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard)}
 
 .suggestions button:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 7px 20px #34507109;
-    border-color: #bfceed
+    box-shadow: var(--shadow-soft);
+    border-color: var(--border-subtle)
 }
 
 .suggestions strong {
@@ -416,13 +405,13 @@ p {
 }
 
 .suggestions svg {
-    color: #9bacc3;
+    color: var(--text-secondary);
     margin-left: auto
 }
 
 .suggestion-number {
     font-size: 9px;
-    color: #b0bbcf
+    color: var(--text-secondary)
 }
 
 .composer-dock {
@@ -442,29 +431,27 @@ p {
 .mode-tabs button {
     font-size: 11px;
     padding: 7px 14px;
-    border-radius: 20px;
-    color: #8794a8;
+    border-radius: var(--radius-lg);
+    color: var(--text-secondary);
     border: 1px solid transparent
 }
 
 .mode-tabs button.selected {
-    background: #eaf1fd;
-    border-color: #dce6f7;
-    color: #3d76cc
+    background: var(--surface-accent);
+    border-color: var(--border-subtle);
+    color: var(--accent-text)
 }
 
 .composer {
-    background: #ffffffdf;
-    border: 1px solid #e0e6f0;
-    border-radius: 19px;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-xl);
     padding: 17px 15px 12px;
-    box-shadow: 0 8px 34px #416d9a09, 0 2px 4px #18355804
-}
+    box-shadow: var(--shadow-elevated)}
 
 .composer:focus-within {
-    border-color: #aec9ef;
-    box-shadow: 0 0 0 3px #1470ed06
-}
+    border-color: var(--focus-ring);
+    box-shadow: 0 0 0 3px var(--focus-halo)}
 
 .composer textarea {
     width: 100%;
@@ -481,7 +468,7 @@ p {
 }
 
 .composer textarea::placeholder {
-    color: #a3acbc
+    color: var(--text-secondary)
 }
 
 .composer-actions {
@@ -500,7 +487,7 @@ p {
 .divider {
     height: 17px;
     width: 1px;
-    background: #e6eaf2;
+    background: var(--surface-primary);
     margin: 0 10px
 }
 
@@ -509,8 +496,8 @@ p {
     align-items: center;
     gap: 7px;
     font-size: 11px;
-    color: #6681a6;
-    border-radius: 8px;
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
     padding: 8px
 }
 
@@ -519,21 +506,20 @@ p {
 }
 
 .send-button {
-    background: #1a70e9;
-    color: white;
+    background: var(--accent);
+    color: var(--text-on-accent);
     width: 34px;
     height: 34px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 11px;
-    box-shadow: 0 3px 7px #1470ed2b
-}
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-soft)}
 
 .composer-note {
     text-align: center;
     font-size: 9px;
-    color: #a0acbf;
+    color: var(--text-secondary);
     margin: 13px 0 0
 }
 
@@ -543,8 +529,8 @@ p {
 
 .primary {
     background: var(--blue);
-    color: #fff;
-    border-radius: 10px;
+    color: var(--text-on-accent);
+    border-radius: var(--radius-md);
     padding: 10px 16px;
     font-size: 12px;
     display: inline-flex;
@@ -554,9 +540,9 @@ p {
 }
 
 .secondary {
-    background: #f0f4fa;
-    border: 1px solid #e3e9f2;
-    border-radius: 10px;
+    background: var(--surface-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
     padding: 10px 14px;
     font-size: 12px;
     display: inline-flex;
@@ -567,7 +553,7 @@ p {
 
 .text-button {
     font-size: 12px;
-    color: var(--blue);
+    color: var(--accent-text);
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -578,9 +564,9 @@ p {
     font-size: 12px;
     line-height: 1.6;
     padding: 12px 15px;
-    border-radius: 11px;
-    background: #edf3fd;
-    color: #486b9c;
+    border-radius: var(--radius-md);
+    background: var(--surface-primary);
+    color: var(--text-secondary);
     margin: 12px 0;
     display: flex;
     gap: 10px;
@@ -588,8 +574,8 @@ p {
 }
 
 .notice.error {
-    background: #fff1f2;
-    color: #9d4a5c
+    background: var(--surface-error);
+    color: var(--status-error)
 }
 
 .notice button {
@@ -600,10 +586,10 @@ p {
 .badge {
     font-size: 9px;
     letter-spacing: .06em;
-    border: 1px solid #dfe7f3;
-    border-radius: 20px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
     padding: 5px 9px;
-    color: #7d90ad
+    color: var(--text-secondary)
 }
 
 .row {
@@ -619,7 +605,7 @@ p {
 .field-label {
     font-size: 11px;
     font-weight: 550;
-    color: #63738a;
+    color: var(--text-secondary);
     display: block;
     margin: 17px 0 7px
 }
@@ -628,9 +614,9 @@ p {
     display: block;
     width: 100%;
     padding: 11px 12px;
-    border: 1px solid #dfe5ef;
-    border-radius: 10px;
-    background: #fbfcff;
+    border: 1px solid var(--border-control);
+    border-radius: var(--radius-md);
+    background: var(--surface-primary);
     font-size: 13px;
     color: var(--ink)
 }
@@ -649,7 +635,7 @@ p {
 }
 
 .page h1 {
-    font-family: Manrope, sans-serif;
+    font-family: var(--font-sans);
     font-weight: 500;
     letter-spacing: -1.3px;
     font-size: 34px
@@ -670,7 +656,7 @@ p {
 .modal-backdrop {
     position: fixed;
     inset: 0;
-    background: #18283f45;
+    background: var(--overlay-background);
     backdrop-filter: blur(8px);
     z-index: 60;
     display: grid;
@@ -683,15 +669,14 @@ p {
     max-width: 470px;
     max-height: 90dvh;
     overflow: auto;
-    background: #fff;
-    border-radius: 22px;
-    border: 1px solid #fff;
+    background: var(--surface-elevated);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-subtle);
     padding: 28px;
-    box-shadow: 0 35px 100px #12244022
-}
+    box-shadow: var(--shadow-dialog)}
 
 .dialog h2 {
-    font-family: Manrope, sans-serif;
+    font-family: var(--font-sans);
     letter-spacing: -.7px;
     font-weight: 600
 }
@@ -798,7 +783,7 @@ p {
         display: block;
         position: fixed;
         inset: 0;
-        background: #152a4344;
+        background: var(--overlay-background);
         backdrop-filter: blur(3px);
         z-index: 25
     }
@@ -894,7 +879,7 @@ p {
 
     .composer {
         padding: 13px 10px 10px;
-        border-radius: 16px
+        border-radius: var(--radius-lg)
     }
 
     .page {
