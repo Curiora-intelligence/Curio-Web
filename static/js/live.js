@@ -6,6 +6,8 @@ import {state, setBusy, addMessage, completeReply, failReply, renderAnswer} from
 // Curio Speak uses the existing /live/ws transcript contract. No camera or audio frames.
 let socket = null, configured = false, inFlight = null, reply = null;
 let connectionTimer, backoffTimer, recognition = null, recognitionButton = null;
+let dictationTarget = null;
+const workAvailability = $('#work-availability').textContent;
 function status(text) { $('#live-state').textContent = text; }
 function controls() { $('#live-send').disabled = !configured || !!inFlight || !$('#live-message').value.trim(); }
 function send(payload) {
@@ -74,6 +76,7 @@ function closeLive() {
 }
 function voiceStatus(message = '') {
   if ($('#live-dialog').open) { status(message || 'Ready for your question.'); return; }
+  if (dictationTarget?.id === 'work-message') { $('#work-availability').textContent = message || workAvailability; return; }
   $('#voice-status').textContent = message; $('#voice-status').hidden = !message;
 }
 function stopDictation() {
@@ -87,10 +90,10 @@ function dictate(target, button) {
   if (recognition) { stopDictation(); voiceStatus(); return; }
   const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!Recognition) { voiceStatus('Dictation is unavailable in this browser. You can keep typing.'); return; }
-  const current = new Recognition(); recognition = current; recognitionButton = button;
+  const current = new Recognition(); recognition = current; recognitionButton = button; dictationTarget = target;
   current.lang = navigator.language || 'en-IN'; current.continuous = true; current.interimResults = true;
   const original = target.value;
-  voiceStatus(); button.classList.add('listening'); button.setAttribute('aria-pressed', 'true'); emit('dictation-state', true);
+  voiceStatus('Listening… Stop dictation to review your text.'); button.classList.add('listening'); button.setAttribute('aria-pressed', 'true'); emit('dictation-state', true);
   current.onresult = event => {
     if (recognition !== current) return;
     let text = ''; for (let i = 0; i < event.results.length; i++) text += event.results[i][0].transcript + ' ';
@@ -113,13 +116,20 @@ export function initLive() {
   document.addEventListener('stop-dictation', stopDictation);
   document.addEventListener('workspace-changed', () => { stopDictation(); voiceStatus(); });
   if (!(window.SpeechRecognition || window.webkitSpeechRecognition)) {
-    for (const id of ['#microphone', '#live-microphone']) { $(id).disabled = true; $(id).title = 'Dictation is unavailable in this browser'; $(id).setAttribute('aria-label', 'Dictation is unavailable in this browser'); }
+    for (const id of ['#microphone', '#work-microphone', '#live-microphone']) {
+      const button = $(id);
+      button.disabled = true; button.title = 'Dictation is unavailable in this browser'; button.setAttribute('aria-label', 'Dictation is unavailable in this browser');
+    }
   }
   $('#open-live').onclick = openLive; $('#close-live').onclick = closeLive;
   $('#live-dialog').addEventListener('cancel', event => { event.preventDefault(); closeLive(); });
   $('#microphone').onclick = () => dictate($('#message'), $('#microphone'));
+  $('#work-microphone').onclick = () => dictate($('#work-message'), $('#work-microphone'));
   $('#live-microphone').onclick = () => dictate($('#live-message'), $('#live-microphone'));
-  $('#message').addEventListener('input', () => { $('#voice-status').hidden = true; });
+  for (const id of ['#message', '#work-message']) $(id).addEventListener('input', event => {
+    if (event.isTrusted && recognition && dictationTarget === $(id)) stopDictation();
+    if (!recognition) { if (id === '#message') $('#voice-status').hidden = true; else $('#work-availability').textContent = workAvailability; }
+  });
   $('#live-message').addEventListener('input', controls);
   $('#live-form').onsubmit = event => {
     event.preventDefault(); const text = $('#live-message').value.trim(); if (!text || !configured || inFlight) return;
@@ -129,7 +139,7 @@ export function initLive() {
     if (!send({type: 'transcript', text})) { failReply(reply, 'Curio Speak is disconnected. Reopen Speak and try again.'); reply = null; inFlight = null; controls(); }
     else { $('#live-message').value = ''; }
   };
-  document.addEventListener('conversation-changed', () => { if ($('#live-dialog').open) closeLive(); });
+  document.addEventListener('conversation-changed', () => { stopDictation(); voiceStatus(); if ($('#live-dialog').open) closeLive(); });
   document.addEventListener('visibilitychange', () => { if (document.hidden) stopDictation(); });
   window.addEventListener('pagehide', () => {
     stopDictation();

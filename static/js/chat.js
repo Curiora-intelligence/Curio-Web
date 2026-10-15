@@ -34,9 +34,19 @@ function renderHistory() {
     list.append(button);
   }
 }
-function updateComposer() { $('#send').disabled = state.busy || (!$('#message').value.trim() && !image); }
+function updateComposer() {
+  const hasDraft = !!($('#message').value.trim() || image);
+  const send = $('#send'), speak = $('#open-live'), focused = document.activeElement;
+  // Image-only drafts can submit. Pending runs keep a disabled send action.
+  const showSend = hasDraft || state.busy;
+  send.hidden = !showSend; speak.hidden = showSend;
+  send.disabled = state.busy || !hasDraft; speak.disabled = state.busy;
+  // If a focused action disappears (for example after clearing an attachment),
+  // return to the input rather than dropping keyboard focus onto the page.
+  if ((send.hidden && focused === send) || (speak.hidden && focused === speak)) $('#message').focus();
+}
 export function setBusy(busy) {
-  state.busy = busy; updateComposer(); $('#new-chat').disabled = busy; $('#open-live').disabled = busy;
+  state.busy = busy; updateComposer(); $('#new-chat').disabled = busy;
   $('#message').setAttribute('aria-busy', String(busy));
   for (const button of document.querySelectorAll('.history-entry')) button.disabled = busy;
   $('#composer-note').textContent = busy ? 'Curio is working. You can keep writing.' : '';
@@ -135,7 +145,6 @@ export function initChat() {
   $('#history-search').addEventListener('input',renderHistory);
   $('#message').addEventListener('input',updateComposer);
   for (const button of document.querySelectorAll('[data-prompt]')) button.onclick = () => { if(state.busy) return; $('#message').value=button.dataset.prompt; $('#message').dispatchEvent(new Event('input')); $('#message').focus(); };
-  $('#attach-image').onclick = () => $('#image-file').click();
   $('#image-file').onchange = () => { const file=$('#image-file').files[0]; if (!file) return; try { validateImage(file); image=file; $('#attachment span').textContent=file.name; $('#attachment').hidden=false; updateComposer(); notice(); } catch(error) { clearImage(); notice(error.message); } };
   $('#remove-image').onclick = clearImage;
   renderHistory();

@@ -22,7 +22,13 @@ Use the same hostname for both servers and allow the interface origin in the bac
 
 Chat and Work switching, sidebar collapse and mobile navigation do not start, stop or replace accepted runs. New Chat and conversation selection are blocked during a run. History comes from actual conversations, never sample content. The retained `/marketplace/history/conversations` and `/marketplace/conversations/{id}` backend paths are the existing authenticated conversation endpoints; no service dashboard remains.
 
-Interview, service navigation/pages, category tabs, fictional discovery, the decorative orb and manual theme controls have been removed. Curio Speak uses the verified voice-only transcript contract on the existing `/live/ws/{user_id}` endpoint. Dictation creates editable text; sending remains explicit. Optional browser speech synthesis provides spoken replies. There is no camera access or raw audio streaming in Web. Closing Speak stops dictation while an accepted answer may finish in Chat. Physical microphone and speech-service availability vary by browser.
+Interview, service navigation/pages, category tabs, fictional discovery, the decorative orb and manual theme controls have been removed. The compact Chat composer shows Curio Speak when empty and Send when text or an image is present, in the same trailing position. Curio Speak uses the verified voice-only transcript contract on the existing `/live/ws/{user_id}` endpoint. The independent neutral microphone dictates editable text into Chat or Work without sending. Dictation also remains available inside Speak; sending is explicit. Optional browser speech synthesis provides spoken replies. There is no camera access or raw audio streaming in Web. Closing Speak stops dictation while an accepted answer may finish in Chat. Physical microphone and speech-service availability vary by browser.
+
+The plus button opens a flat capability menu; only **Add photos & files** opens the picker. Chat supports JPEG, PNG, WebP and GIF up to 15 MB. Library, image generation, direct web search, GitHub and Gmail remain visibly unavailable until their interface integrations are verified. Work uploads remain unavailable. Optional backend web tools do not establish a working direct menu action.
+
+The top-right **Temporary chat** control is an unavailable UI shell. Its tooltip explains that chats continue to use normal history and memory; it does not start a private session or change retention.
+
+The compact Low / Medium / High selector defaults to Medium and persists the same preference across Chat, Work and reloads. It explicitly states that the preference is **not applied to responses yet**: the inspected backend has no supported request field for thinking effort. No quota or context-size claims are made.
 
 ## Verification
 

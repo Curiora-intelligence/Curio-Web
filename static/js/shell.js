@@ -1,4 +1,5 @@
 import {initTypingPlaceholder} from './placeholder.js';
+import {initComposerControls} from './composer.js';
 
 // Presentation state only. Workspace navigation never owns or cancels chat runs.
 export function initShell() {
@@ -39,7 +40,17 @@ export function initShell() {
   narrow.addEventListener('change', () => { mobileOpen = false; syncSidebar(); });
   syncSidebar();
 
+  const temporaryChat = $('#temporary-chat'), utility = temporaryChat.closest('.header-utility');
+  temporaryChat.addEventListener('focus', () => utility.classList.remove('hint-dismissed'));
+  utility.addEventListener('pointerenter', () => utility.classList.remove('hint-dismissed'));
+  document.addEventListener('keydown', event => { if (event.key === 'Escape') utility.classList.add('hint-dismissed'); });
+
+  const modeSwitch = $('.mode-switch');
   function workspace(name, focus = false) {
+    if (modeSwitch.dataset.workspace !== name) {
+      modeSwitch.classList.add('has-switched');
+      modeSwitch.dataset.workspace = name;
+    }
     for (const kind of ['chat','work']) {
       const selected = kind === name;
       const tab = $(`#${kind}-tab`);
@@ -73,6 +84,7 @@ export function initShell() {
   };
   $('#dismiss-notice').onclick = () => { $('#notice').hidden = true; };
   initTypingPlaceholder($('#message'));
+  initComposerControls();
   $('#search-button').onclick = () => {
     const box = $('#history-search-box'); box.hidden = !box.hidden;
     $('#search-button').setAttribute('aria-expanded', String(!box.hidden));

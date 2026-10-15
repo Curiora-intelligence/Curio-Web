@@ -1,0 +1,17 @@
+<div class="composer-popover capability-menu glass" id="capability-menu" role="menu" aria-label="Capabilities" hidden>
+  <button type="button" class="capability-item" role="menuitem" tabindex="-1" id="upload-image" aria-describedby="upload-formats">
+    {{ icon('photo') }}<span class="capability-copy"><span class="capability-title">Add photos &amp; files <small id="upload-availability">Images only</small></span><span class="capability-description">Upload from your device</span><span class="capability-description" id="upload-formats">JPEG, PNG, WebP or GIF · up to 15 MB</span></span>
+  </button>
+  {% for name, title, description in [('library','Add from library','Browse saved files'),('image','Create image','Generate a visual'),('globe','Web search','Find current information'),('github','GitHub','Work with repositories'),('mail','Gmail','Work with email')] %}
+  <button type="button" class="capability-item" role="menuitem" tabindex="-1" aria-disabled="true" title="{{ title }} is not connected in this interface">
+    {{ icon(name) }}<span class="capability-copy"><span class="capability-title">{{ title }} <small>Unavailable</small></span><span class="capability-description">{{ description }}</span></span>
+  </button>
+  {% endfor %}
+</div>
+<div class="composer-popover effort-menu glass" id="effort-menu" role="menu" aria-label="Thinking effort" aria-describedby="effort-availability" hidden>
+  <p class="popover-label">Thinking effort</p>
+  {% for value in ['low','medium','high'] %}
+  <button type="button" role="menuitemradio" tabindex="-1" data-effort="{{ value }}" aria-checked="{{ 'true' if value == 'medium' else 'false' }}"><span>{{ value|capitalize }}</span>{{ icon('check',16) }}</button>
+  {% endfor %}
+  <p class="popover-description" id="effort-availability">Preference only. Not applied to responses yet.</p>
+</div>

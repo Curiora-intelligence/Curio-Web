@@ -9,11 +9,17 @@
         <button class="icon-button sidebar-open-button" id="menu" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">{{ icon('panel') }}</button>
         <span class="top-wordmark">Curio</span><span id="page-label" class="sr-only">A fresh conversation</span>
       </div>
-      <div class="mode-switch" role="tablist" aria-label="Workspace">
+      <div class="mode-switch" data-workspace="chat" role="tablist" aria-label="Workspace">
+        <span class="mode-indicator" aria-hidden="true"></span>
         <button id="chat-tab" role="tab" type="button" aria-selected="true" aria-controls="chat-panel">Chat</button>
         <button id="work-tab" role="tab" type="button" aria-selected="false" aria-controls="work-panel" tabindex="-1">Work</button>
       </div>
-      <div aria-hidden="true"></div>
+      <div class="top-right">
+        <div class="header-utility">
+          <button type="button" id="temporary-chat" class="icon-button" aria-label="Temporary chat" aria-disabled="true" aria-describedby="temporary-chat-help" title="Temporary chat">{{ icon('temporary') }}</button>
+          <span id="temporary-chat-help" class="utility-hint" role="tooltip">Not available yet. Chats continue to use normal history and memory.</span>
+        </div>
+      </div>
     </header>
     <section id="chat-panel" class="workspace chat-panel empty" role="tabpanel" aria-labelledby="chat-tab">
       <div class="chat-stage empty" id="chat-stage" tabindex="0" aria-label="Conversation">
@@ -35,6 +41,7 @@
 {% include 'components/progress.html' %}
 {% include 'components/memory_panel.html' %}
 {% include 'components/live_modal.html' %}
+{% include 'components/composer_menus.html' %}
 <dialog id="settings-dialog" class="dialog" aria-labelledby="settings-title">
   <div class="dialog-header"><h2 id="settings-title">Settings</h2><button class="icon-button" data-close="settings-dialog" aria-label="Close settings">{{ icon('close') }}</button></div>
   <p class="helper" id="identity-description"></p>

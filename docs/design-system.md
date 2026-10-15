@@ -2,7 +2,7 @@
 
 The implementation uses the local Curiora Campus, Curiora Design System, Curiora Website and Curiora Research sources as brand references. In particular: Campus `design-system.css`, `base.css`, `components.css`, `home.css`, `visual-intelligence.css`, its base/home/navbar/composer templates and `curio.js`; shared `tokens.css`, `typography.css`, `glass.css`, `components.css`, `signature.css` and playground; Website design-system/components and Research research.css/base template. Their CSS is not imported into this application.
 
-The approved HTML preview and supplied ChatGPT Chat/Work screenshots determine spatial hierarchy. The implementation uses an independent Curio wordmark and simple line icons. The shell has a 268px sidebar (246px on smaller desktops), a 216px centered switch, a 770px readable column and restrained 26–30px welcome headings. At 760px and below, navigation becomes a modal drawer. No hardcoded conversations, pinned collections or projects are inserted.
+The approved HTML preview and supplied ChatGPT Chat/Work screenshots determine spatial hierarchy. The implementation uses an independent Curio wordmark and simple line icons. The shell has a 268px sidebar (246px on smaller desktops), a 200px centered switch, a 770px readable column and restrained 26–30px welcome headings. At 760px and below, navigation becomes a modal drawer. No hardcoded conversations, pinned collections or projects are inserted.
 
 ## Source ownership
 
@@ -14,6 +14,7 @@ The approved HTML preview and supplied ChatGPT Chat/Work screenshots determine s
 - `memory.css`, `live.css`: retained component surfaces.
 - Jinja partials: sidebar, composer, Work, icons, memory and Speak.
 - `shell.js`: workspace selection, responsive drawer/focus, draft preservation and textarea sizing. It has no transport dependencies.
+- `composer.js`: flat capability menu, keyboard/focus/viewport handling and persistent effort preference; no transport dependencies.
 - `chat.js`: conversation/history, submission and accepted-run ownership.
 - `api.js`, `sse.js`: unchanged HTTP/multipart and event/recovery contracts.
 - `live.js`: Curio Speak through the existing general-mode WebSocket transcript contract, browser dictation and microphone error handling. No Web camera access.
@@ -23,17 +24,36 @@ The approved HTML preview and supplied ChatGPT Chat/Work screenshots determine s
 
 | Role | Light | Dark |
 | --- | --- | --- |
-| Canvas | `#ffffff` | `#0b0b0d` |
-| Sidebar | `#f5f5f7` | `#111113` |
-| Raised neutral surface | `#f5f5f7` | `#1b1b1e` |
-| Primary text | `#111318` | `#f5f5f7` |
-| Secondary text | `#6e6e73` | `#a1a1a6` |
+| Canvas | `#fafaf9` | `#0c0c0c` |
+| Sidebar | `#f1f1f0` | `#101010` |
+| Raised neutral surface | `#f3f3f2` | `#181818` |
+| Primary text | `#111318` | `#eeeeef` |
+| Secondary text | `#68686d` | `#a0a0a3` |
 | Action blue | `#0071e3` | `#5da8ff` |
 | Text on blue | `#ffffff` | `#0c1524` |
 
-Secondary text follows Campus in light mode and neutral gray in dark mode. `--accent-text` is a separate accessible link color. Input boundaries use `--border-control`; layout separators use the quieter `--border-subtle`.
+Secondary text uses accessible neutral grays in both appearances. `--accent-text` is a separate accessible link color. Input boundaries use `--border-control`; layout separators use the quieter `--border-subtle`.
 
-The system font stack includes native Apple fonts by name, followed by Helvetica Neue, Segoe UI and Arial. No fonts are fetched or bundled. Code uses the system monospace stack. The Chat composer uses a 32px radius, 42px actions, 16px text and a single aligned row inspired by the actual Campus composer. It grows for multiline input. Mobile uses tighter padding and a 28px radius. Other radii remain semantic, with quieter 16px Work cards. Glass is limited to composer materials, with 28px blur, neutral shadows and no color saturation or ambient glow.
+The system font stack includes native Apple fonts by name, followed by Helvetica Neue, Segoe UI and Arial. No fonts are fetched or bundled. Code uses the system monospace stack. The Chat composer is a 48px resting capsule with a 25px radius, 36px actions and 16px/22px input text, close to Campus's 52px navigation pill. On mobile it is 50px tall with 44px touch targets. It grows for multiline input; Work retains its taller drafting area. Other radii remain semantic, with quieter 16px Work cards. Glass is limited to composers and their popovers, with 28px blur, softly translucent warm white or neutral graphite, an inner highlight and no color saturation or ambient glow.
+
+The Chat composer orders controls as Plus → input → thinking effort → dictation microphone → Speak/Send. Empty or whitespace-only input shows Curio Speak; text or an image attachment shows Send. A pending request keeps Send disabled even when the input is empty. The inactive button uses native `hidden`, so it is neither visible nor keyboard-focusable. Only the incoming action animates (160ms opacity); there is no scaling, overlap or layout shift, and reduced motion disables the transition. Clearing a focused action returns focus to the input. The empty placeholder clips without scrollbars; actual multiline drafts retain scrolling. Independent neutral microphones dictate editable text into Chat and Work, never submitting automatically. Curio Speak retains editable transcripts and optional browser-spoken replies; it is not verified real-time speech-to-speech.
+
+`composer_menus.html` supplies one shared, ungrouped capability list above the active composer. Rows have neutral icons, concise descriptions and subtle full-row hover. Only the upload row opens the image picker, supporting JPEG/PNG/WebP/GIF up to 15 MB in Chat. Other rows explicitly show Unavailable; Work upload shows Chat only. Menus scroll within the available visual viewport. Arrow keys, Home and End navigate rows; Escape restores opener focus, Tab resumes normal navigation, and outside pointer/focus or a workspace change dismisses the menu. Unavailable rows remain discoverable with arrow keys but cannot activate.
+
+Both effort triggers share Low / Medium / High, default Medium, saved under `curio_thinking_effort`. Storage failure is disclosed as a page-only preference. The menu and trigger accessible label explicitly say it is not applied to responses yet. No inference field, quota panel or token/context-size claim is introduced. The inspected gateway exposes no effort setting; one backend runtime currently hardcodes Low. This presentation preference must not be mapped to inference until a supported contract exists.
+
+## Interaction materials
+
+The 15 October refinement keeps the geometry intact while using a warm near-white canvas, layered white controls and neutral near-black dark surfaces. Glass borders are softened independently of accessible input boundaries and focus rings. Shared `--hover-field` and `--hover-border` tokens provide quiet neutral responses for utility icons, sidebar items and quick actions. Blue remains reserved for primary actions and meaningful focus/selection.
+
+The selected Chat/Work capsule travels in 320ms using Campus's standard easing. Its clipped pseudo-element is a shallow curved volume of muted translucent blue. During a switch it shifts toward the leading side and tilts up by 7 degrees, then levels and settles to 22% opacity of an already faint color token (effective resting alpha around 2–3%). Reverse selection uses the mirrored keyframes. There are no gradients, specular sweeps, outside halos, loops or JavaScript timers. Existing workspace state selects the direction; CSS transitions retarget interrupted travel during rapid switching.
+
+Primary actions have a slightly brighter blue border and a compact 7–8px blue-tinted hover shadow. Pressed state darkens the surface without scaling. Speak strokes respond once over 280ms with 0/30/60ms stagger, then return to rest. Send lifts 1.5px and smoothly returns when hover ends. Motion requires a hover-capable pointer and no reduced-motion preference. Reduced motion removes travel, tide and icon movement while preserving immediate selected-state changes and static feedback.
+
+The old primary reflection pseudo-element/keyframes, mode light-sweep gradients and composer-wide blue focus halo were removed. The input uses a neutral 2px focus-visible underline with at least 3:1 contrast; child buttons keep their own visible focus outlines. Hovering or focusing a child never adds a blue shadow to the composer. Neutral glass edge highlights are reduced in both appearances.
+Effort text is 14px, medium weight, with aligned chevrons and more breathing room in both composers. Quick actions use 13px text with neutral rounded hover surfaces. Neither change affects submission or inference.
+
+The top-right Temporary Chat button is an `aria-disabled` presentation shell, still keyboard-discoverable. Its native title is “Temporary chat”; its accessible description and hover/focus explanation state that it is unavailable and that normal history and memory still apply. Escape dismisses the explanation. No temporary-session state, retention promise or backend request exists.
 
 ## System appearance
 
@@ -45,13 +65,13 @@ Keep future manual preference support separate from these semantic values; it is
 
 Chat and Work are tab panels with a keyboard-operable tablist. Arrow keys, Home and End select tabs. A view switch never touches a run watcher or resets a draft. Unsupported Work controls use native disabled states and explanatory text. The desktop handoff is explicitly unavailable until a verified destination is supplied; it does not copy or submit a draft.
 
-The mobile drawer makes the background inert, traps Tab, supports Escape and returns focus to its opener. Native dialogs provide focus containment. Textareas use a visible composer focus ring and retain IME-safe Enter/Shift+Enter behavior. `100dvh`, safe-area padding and visual viewport height keep the application bounded and help accommodate software keyboards; real mobile keyboard checks remain necessary.
+The mobile drawer makes the background inert, traps Tab, supports Escape and returns focus to its opener. Native dialogs provide focus containment. Textareas use an input-only neutral focus underline and retain IME-safe Enter/Shift+Enter behavior. `100dvh`, safe-area padding and visual viewport height keep the application bounded and help accommodate software keyboards; real mobile keyboard checks remain necessary.
 
 Messages, code and tables are independently scrollable within the main column. Content is built with DOM text nodes; raw HTML is never inserted by the Markdown renderer. All component transitions respect reduced motion. The only idle animation is the typing placeholder; reduced motion renders static text. It never changes an input value or its accessible label. There are no ambient animation effects.
 
 ## Future refinement boundaries
 
-Typography/spacing can evolve in tokens and CSS. Composer controls remain in one partial plus Chat/Speak handlers. Sidebar navigation lives in its partial and shell module. Work can receive a separate transport adapter when a real backend contract exists. These changes do not require another framework or shell rewrite.
+Typography/spacing can evolve in tokens and CSS. Composer controls live in the Chat/Work partials, shared menu partial and composer module, with Chat/Speak handlers retaining submission ownership. Sidebar navigation lives in its partial and shell module. Work can receive a separate transport adapter when a real backend contract exists. These changes do not require another framework or shell rewrite.
 
 ## Feedback
 

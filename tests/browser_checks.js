@@ -7,6 +7,7 @@ async function until(check,label){for(let n=0;n<100;n++){if(await check())return
 function input(selector,value){$(selector).value=value;$(selector).dispatchEvent(new Event('input',{bubbles:true}));}
 async function fixture(){return(await fetch('/__fixtures/state')).json();}
 async function idle(){await until(()=>!$('#new-chat').disabled,'run completion');}
+function actionIs(mode){const shown=[...$('.composer-action').children].filter(button=>button.getClientRects().length);return shown.length===1&&shown[0].id===mode;}
 try{
 await until(()=>$('#new-chat').onclick&&$('#history-list button'),'initialization');
 const moduleURL=name=>new URL(name,document.querySelector('script[src$="/js/app.js"]').src).href;
@@ -14,10 +15,39 @@ const {state,renderAnswer}=await import(moduleURL('chat.js'));
 const {validateImage}=await import(moduleURL('api.js'));
 const {speechText}=await import(moduleURL('voice.js'));
 ok($('#profile-name').textContent==='Test account','account response populates identity');
-ok($('#send').disabled,'empty composer disabled');
-await until(()=>$('#message').placeholder!=='Ask Curio anything…','idle placeholder animation');ok(!$('#message').value,'animated placeholder never fills the input value');
+const temporaryBefore=await fixture();$('#temporary-chat').click();
+ok($('#temporary-chat').getAttribute('aria-disabled')==='true'&&$('#temporary-chat-help').textContent.includes('normal history and memory'),'Temporary Chat clearly discloses unavailable privacy behavior');
+ok((await fixture()).submissions.length===temporaryBefore.submissions.length&&!$('#messages').textContent.trim(),'Temporary Chat shell starts no request or conversation');
+$('#temporary-chat').focus();document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));ok(getComputedStyle($('#temporary-chat-help')).visibility==='hidden','Escape dismisses the utility tooltip');$('#message').focus();
+ok(actionIs('open-live')&&$('#send').disabled,'empty composer exposes only Speak');
+ok($('#microphone').getClientRects().length&&$('#chat-effort').getClientRects().length,'dictation and thinking effort are independently available');
+const picker=$('#image-file'),originalClick=picker.click;let pickerCalls=0;picker.click=()=>pickerCalls++;
+$('#attach-image').click();ok(!$('#capability-menu').hidden&&pickerCalls===0&&$('#attach-image').getAttribute('aria-expanded')==='true','plus opens capabilities without opening the file picker');
+const menuItems=[...$('#capability-menu').querySelectorAll('[role="menuitem"]')];
+ok(menuItems.map(item=>item.querySelector('.capability-title').childNodes[0].textContent.trim()).join('|')==='Add photos & files|Add from library|Create image|Web search|GitHub|Gmail','capabilities form one flat list in the requested order');
+ok(document.activeElement===$('#upload-image')&&menuItems.slice(1).every(item=>item.getAttribute('aria-disabled')==='true'),'menu focuses upload and marks unverified integrations unavailable');
+const key=name=>document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{key:name,bubbles:true,cancelable:true}));
+key('ArrowDown');ok(document.activeElement===menuItems[1],'arrow navigation reaches unavailable items to read their descriptions');menuItems[1].click();ok(pickerCalls===0&&!$('#capability-menu').hidden,'unavailable items have no fabricated action');
+key('End');ok(document.activeElement===menuItems.at(-1),'End reaches the last capability');key('Home');ok(document.activeElement===menuItems[0],'Home returns to upload');key('Escape');ok($('#capability-menu').hidden&&document.activeElement===$('#attach-image'),'Escape closes capabilities and restores focus');
+$('#attach-image').click();document.body.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerType:'touch'}));ok($('#capability-menu').hidden,'outside touch dismisses capabilities');
+$('#attach-image').click();$('#upload-image').click();ok(pickerCalls===1&&$('#capability-menu').hidden&&document.activeElement===$('#attach-image'),'only upload invokes the file picker and closes the menu');picker.click=originalClick;
+ok([...document.querySelectorAll('[data-effort-label]')].every(label=>label.textContent==='Medium'),'thinking effort defaults to Medium in Chat and Work');
+$('#chat-effort').click();ok(!$('#effort-menu').hidden&&$('#effort-availability').textContent.includes('Not applied to responses'),'effort menu discloses that inference is unaffected');$('[data-effort="high"]').click();ok($('#effort-menu').hidden&&localStorage.getItem('curio_thinking_effort')==='high'&&[...document.querySelectorAll('[data-effort-label]')].every(label=>label.textContent==='High'),'effort choice persists and synchronizes both composers');
+$('#work-tab').click();$('#work-effort').click();ok($('[data-effort="high"]').getAttribute('aria-checked')==='true','Work retains the selected effort');$('[data-effort="low"]').click();$('#work-capabilities').click();ok($('#upload-image').getAttribute('aria-disabled')==='true','Work does not advertise unsupported attachments');key('Escape');$('#chat-tab').click();ok($('#chat-effort [data-effort-label]').textContent==='Low','Chat reflects a preference changed in Work');
+$('#chat-effort').click();key('Escape');ok(document.activeElement===$('#chat-effort'),'effort Escape restores focus');
+$('#attach-image').click();$('#message').focus();ok($('#capability-menu').hidden,'moving focus outside dismisses the popover');
+$('#microphone').click();window.__recognition.onresult({results:[[{transcript:'An editable dictated thought'}]]});ok($('#message').value==='An editable dictated thought'&&actionIs('send')&&$('#microphone').getClientRects().length,'dictation creates an editable draft while Send replaces Speak');const dictationBefore=(await fixture()).submissions.length;$('#microphone').click();ok((await fixture()).submissions.length===dictationBefore&&$('#microphone').getAttribute('aria-pressed')==='false','standalone dictation never submits');
+$('#microphone').click();window.__recognition.onerror({error:'not-allowed'});ok(!$('#voice-status').hidden&&$('#voice-status').textContent.includes('browser settings'),'composer microphone denial has actionable feedback');input('#message','');
+$('#work-tab').click();$('#work-microphone').click();window.__recognition.onresult({results:[[{transcript:'A task draft'}]]});$('#work-microphone').click();ok($('#work-message').value==='A task draft','Work dictation remains editable without starting execution');$('#chat-tab').click();
+const animationPaused=()=>document.hidden||matchMedia('(prefers-reduced-motion: reduce)').matches||document.activeElement===$('#message');
+await until(()=>animationPaused()||$('#message').placeholder!=='Ask Curio anything…','idle placeholder animation');
+if(animationPaused())report.textContent+='SKIP idle animation observation: hidden/focused page or reduced motion; lifecycle covered by placeholder module tests.\n';
+ok(!$('#message').value,'placeholder never fills the input value');
 $('#message').focus();await pause(200);ok($('#message').placeholder==='Ask Curio anything…','focusing composer restores the static placeholder');
 $('[data-prompt]').click();ok($('#message').value.includes('write or edit')&&!$('#send').disabled,'quick action prepares an editable draft');
+ok(actionIs('send'),'prepared draft replaces Speak with Send');
+$('#send').focus();input('#message','');ok(actionIs('open-live')&&document.activeElement===$('#message'),'clearing a draft restores Speak and keeps keyboard focus in the input');
+input('#message','   ');ok(actionIs('open-live')&&$('#send').disabled,'whitespace does not enable an empty submission');
 input('#message','Existing Chat draft');$('#work-tab').click();input('#work-message','Work draft');$('#chat-tab').click();
 ok($('#message').value==='Existing Chat draft','Chat draft survives Work switching');
 $('#work-tab').click();ok($('#work-message').value==='Work draft','Work draft survives Chat switching');
@@ -31,17 +61,21 @@ $('#message').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',isComposing
 ok((await fixture()).submissions.length===before,'IME Enter never submits');
 const shift=new KeyboardEvent('keydown',{key:'Enter',shiftKey:true,bubbles:true,cancelable:true});$('#message').dispatchEvent(shift);ok(!shift.defaultPrevented,'Shift+Enter remains multiline');
 input('#message','Explain a clear plan');$('#chat-form').requestSubmit();await until(()=>state.busy,'accepted run');
+ok(actionIs('send')&&$('#send').disabled,'pending empty composer keeps only a disabled Send');
 input('#message','Draft during the run');$('#work-tab').click();await idle();$('#chat-tab').click();
 ok(state.messages.length===2,'SSE replay does not duplicate messages');
 ok(state.messages[1].activity.length===1,'SSE replay deduplicates progress IDs');
 ok($('#message').value==='Draft during the run','running request and draft survive switching views');
+ok(actionIs('send')&&!$('#send').disabled,'draft becomes sendable when the active run finishes');
 ok(!$('#chat-panel').classList.contains('empty')&&$('#welcome').hidden,'active conversation hides landing');
 let last=(await fixture()).submissions.at(-1);ok(last.mode==='general'&&last.user_id==='fixture-user'&&last.request_id,'multipart mode, identity and request ID retained');
+ok(Object.keys(last).every(name=>['message','user_id','request_id','mode','conversation_id','latitude','longitude','image','csrf','identity'].includes(name)),'effort preference adds no unsupported request fields');
 ok(last.csrf==='test-csrf'&&last.identity==='fixture-user','CSRF and identity headers retained');
 ok($('#messages pre')&&$('#messages table')&&!$('#messages script'),'safe Markdown, code and tables render');
 ok(!$('#messages a[href^="javascript:"]'),'unsafe Markdown links remain inert');
 ok([...$('#messages').querySelectorAll('a')].every(a=>a.rel.includes('noopener')),'external source links protected');
 $('#new-chat').click();ok(state.messages.length===0&&$('#chat-panel').classList.contains('empty'),'New Chat clears only active conversation');
+ok(actionIs('open-live'),'New Chat restores the Speak action');
 ok($('#history-list').textContent.includes('Explain a clear plan'),'real conversation appears in local history');
 input('#history-search','Explain a clear plan');ok($('#history-list').querySelectorAll('button').length===1,'history search filters actual conversations');
 $('#history-list button').click();ok(state.messages.length===2,'local conversation reopens');
@@ -52,19 +86,23 @@ const retries=(await fixture()).submissions.filter(r=>r.message.startsWith('[ret
 let invalid=0;for(const f of [new File(['x'],'bad.txt',{type:'text/plain'}),new File([],'empty.png',{type:'image/png'}),{type:'image/png',size:16*1024*1024}]){try{validateImage(f);}catch{invalid++;}}ok(invalid===3,'invalid, empty and oversized attachments rejected');
 const blob=await new Promise(r=>{const c=document.createElement('canvas');c.width=8;c.height=8;c.toBlob(r,'image/png');});const file=new File([blob],'fixture.png',{type:'image/png'});validateImage(file);
 const data=new DataTransfer();data.items.add(file);$('#image-file').files=data.files;$('#image-file').dispatchEvent(new Event('change'));ok(!$('#attachment').hidden,'valid image appears in composer');
+ok(actionIs('send')&&!$('#send').disabled&&!$('#message').value,'image-only draft exposes Send');
+$('#remove-image').click();ok(actionIs('open-live')&&$('#attachment').hidden,'removing the last attachment restores Speak');
 $('#new-chat').click();const secondImage=new DataTransfer();secondImage.items.add(file);$('#image-file').files=secondImage.files;$('#image-file').dispatchEvent(new Event('change'));$('#chat-form').requestSubmit();await until(()=>state.busy,'image submission');await idle();ok((await fixture()).submissions.at(-1).image==='fixture.png','actual multipart image submission');
 $('#memories-button').click();await until(()=>$('#memory-cards').textContent.includes('Concise explanations'),'memories');ok(true,'memory endpoint values render');$('#memory-dialog').close();
-$('#microphone').click();window.__recognition.onresult({results:[[{transcript:'Dictated draft'}]]});ok($('#message').value==='Dictated draft','dictation fills editable draft');const dictationCount=(await fixture()).submissions.length;$('#microphone').click();ok((await fixture()).submissions.length===dictationCount,'dictation never auto-submits');ok(speechText('**Hello** `world`')==='Hello world','voice text normalization retained');
-$('#microphone').click();window.__recognition.onerror({error:'no-speech'});ok($('#notice').hidden&&$('#voice-status').hidden,'routine voice stops stay quiet');
-const composerY=$('#chat-form').getBoundingClientRect().y;
-$('#microphone').click();window.__recognition.onerror({error:'not-allowed'});ok(!$('#voice-status').hidden&&$('#voice-status').textContent.includes('browser settings')&&$('#notice').hidden,'microphone denial is contextual and actionable');
-ok($('#chat-form').getBoundingClientRect().y===composerY,'voice error does not move composer');
 $('#open-live').click();await until(()=>$('#live-state').textContent.includes('Ready for'),'Speak configuration');ok((await fixture()).socketEvents.at(-1).mode==='general','Speak uses supported general mode');
 ok($('#live-title').textContent==='Curio Speak'&&$('#live-send').disabled,'Speak has a voice-only entry and waits for a question');
+$('#live-microphone').click();window.__recognition.onresult({results:[[{transcript:'Dictated draft'}]]});ok($('#live-message').value==='Dictated draft','Speak dictation fills an editable draft');const dictationCount=(await fixture()).socketEvents.filter(event=>event.type==='transcript').length;$('#live-microphone').click();ok((await fixture()).socketEvents.filter(event=>event.type==='transcript').length===dictationCount,'dictation never auto-submits');ok(speechText('**Hello** `world`')==='Hello world','voice text normalization retained');
+$('#live-microphone').click();window.__recognition.onerror({error:'no-speech'});ok($('#notice').hidden&&$('#live-state').textContent==='Ready for your question.','routine voice stops stay quiet');
+const composerY=$('#chat-form').getBoundingClientRect().y;
+$('#live-microphone').click();window.__recognition.onerror({error:'not-allowed'});ok($('#live-state').textContent.includes('browser settings')&&$('#notice').hidden,'microphone denial stays contextual in Speak');
+ok($('#chat-form').getBoundingClientRect().y===composerY,'voice error does not move composer');
+input('#live-message','');
 $('#live-microphone').click();window.__recognition.onresult({results:[[{transcript:'A spoken question'}]]});$('#live-microphone').click();
 ok($('#live-message').value==='A spoken question'&&!$('#live-send').disabled,'Speak dictation produces a reviewable transcript');
 $('#live-form').requestSubmit();await until(()=>state.busy,'Speak question');$('#close-live').click();await idle();ok(state.messages.at(-1).text==='Live fixture answer','accepted Speak answer finishes in Chat after closing');
 ok(window.__mediaRequests===0&&!(await fixture()).socketEvents.some(e=>e.type==='frame'),'Speak never requests camera access or sends camera frames');
+ok((await fixture()).socketEvents.every(event=>!('effort' in event)&&!('thinking_effort' in event)&&!('reasoning_effort' in event)),'saved thinking preference never changes WebSocket fields');
 $('#open-live').click();await until(()=>$('#live-state').textContent.includes('Ready for'),'Speak reopens');input('#live-message','Leave during a spoken question');$('#live-form').requestSubmit();await until(()=>state.busy,'pending Speak lifecycle');
 window.dispatchEvent(new Event('pagehide'));ok(!state.busy&&state.messages.at(-1).error&&state.messages.at(-1).text.includes('check your history'),'page exit releases pending Speak state with an actionable uncertainty message');
 window.dispatchEvent(new Event('pageshow'));$('#close-live').click();
@@ -75,4 +113,4 @@ ok(assets.length>=18&&assets.every(item=>!item.responseStatus||item.responseStat
 ok(assets.every(item=>item.name.includes('/static/v-')&&!item.name.includes('marketplace.js')),'complete browser module tree uses versioned URLs without marketplace.js');
 report.textContent+='\nLoaded assets:\n'+assets.map(item=>`${item.responseStatus||'cached'} ${new URL(item.name).pathname}`).join('\n')+'\n\n';
 ok(!window.__errors.length,'no JavaScript errors or unhandled rejections');report.textContent+=`\n${passes} checks passed. Controlled backend/media; no model or physical device access.`;report.dataset.result='passed';
-}catch(error){report.textContent+=`\nFAIL ${error.stack}`;report.dataset.result='failed';}
+}catch(error){report.textContent+=`\nFAIL ${error.message}\n${error.stack}`;report.dataset.result='failed';}
