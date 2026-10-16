@@ -1,7 +1,35 @@
 /* Speak is a transcript-based voice conversation; the Web UI never opens a camera. */
-.live-dialog { width: min(520px,calc(100vw - 32px)); }
-.speak-state { color: var(--text-secondary); font-size: 13px; line-height: 1.6; min-height: 21px; margin-block: 20px 12px; }
-.live-composer textarea { resize: vertical; min-height: 100px; font-size: 16px; line-height: 1.5; }
-.live-answer { font-size: 15px; line-height: 1.7; margin-top: 24px; overflow-wrap: anywhere; }
-.live-answer:empty { display: none; }
-.listening { background: var(--surface-accent) !important; color: var(--accent-text) !important; }
+.live-dialog {
+    width: min(520px, calc(100vw - 32px));
+}
+
+.speak-state {
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.6;
+    min-height: 21px;
+    margin-block: 20px 12px;
+}
+
+.live-composer textarea {
+    resize: vertical;
+    min-height: 100px;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.live-answer {
+    font-size: 15px;
+    line-height: 1.7;
+    margin-top: 24px;
+    overflow-wrap: anywhere;
+}
+
+.live-answer:empty {
+    display: none;
+}
+
+.listening {
+    background: var(--surface-accent) !important;
+    color: var(--accent-text) !important;
+}

@@ -1,23 +1,41 @@
 <section id="work-panel" class="workspace work-panel" role="tabpanel" aria-labelledby="work-tab" hidden>
-  <div class="welcome"><h1>What should we work on?</h1></div>
+  <div class="welcome">
+    <h1>What should we work on?</h1>
+  </div>
   <div class="work-content">
     <div class="composer work-composer glass">
       <label class="sr-only" for="work-message">Task draft</label>
-      <textarea id="work-message" rows="3" maxlength="16000" placeholder="Describe a task for Curio" aria-describedby="work-availability"></textarea>
+      <textarea id="work-message" rows="3" maxlength="16000" placeholder="Describe a task for Curio"
+        aria-describedby="work-availability"></textarea>
       <div class="composer-actions">
-        <button type="button" class="icon-button" id="work-capabilities" aria-label="Open Work capabilities" aria-haspopup="menu" aria-controls="capability-menu" aria-expanded="false">{{ icon('plus') }}</button>
+        <button type="button" class="icon-button" id="work-capabilities" aria-label="Open Work capabilities"
+          aria-haspopup="menu" aria-controls="capability-menu" aria-expanded="false">{{ icon('plus') }}</button>
         <span class="spacer"></span>
-        <button type="button" class="effort-button" id="work-effort" data-effort-trigger aria-label="Thinking effort: Medium. Preference only, not applied to responses yet." aria-haspopup="menu" aria-controls="effort-menu" aria-expanded="false"><span data-effort-label>Medium</span>{{ icon('chevron',14) }}</button>
-        <button type="button" class="icon-button" id="work-microphone" aria-label="Dictate a task draft" title="Dictate a task draft" aria-pressed="false" aria-describedby="work-availability">{{ icon('mic') }}</button>
-        <button type="button" class="send-button composer-primary" disabled aria-label="Work execution is not available" title="Work execution isn't connected yet">{{ icon('arrow') }}</button>
+        <button type="button" class="effort-button" id="work-effort" data-effort-trigger
+          aria-label="Thinking effort: Medium. Preference only, not applied to responses yet." aria-haspopup="menu"
+          aria-controls="effort-menu" aria-expanded="false"><span data-effort-label>Medium</span>{{ icon('chevron',14)
+          }}</button>
+        <button type="button" class="icon-button" id="work-microphone" aria-label="Dictate a task draft"
+          title="Dictate a task draft" aria-pressed="false" aria-describedby="work-availability">{{ icon('mic')
+          }}</button>
+        <button type="button" class="send-button composer-primary" disabled aria-label="Work execution is not available"
+          title="Work execution isn't connected yet">{{ icon('arrow') }}</button>
       </div>
     </div>
-    <div class="work-context"><p id="work-availability" role="status">Task execution and file deliverables aren't connected yet.</p><button type="button" class="secondary desktop-button" id="open-desktop" disabled aria-describedby="desktop-availability">{{ icon('desktop',16) }} Open desktop app</button></div>
-    <p class="desktop-availability" id="desktop-availability">Desktop app link is not configured yet. Your draft stays here.</p>
+    <div class="work-context">
+      <p id="work-availability" role="status">Task execution and file deliverables aren't connected yet.</p><button
+        type="button" class="secondary desktop-button" id="open-desktop" disabled
+        aria-describedby="desktop-availability">{{ icon('desktop',16) }} Open desktop app</button>
+    </div>
+    <p class="desktop-availability" id="desktop-availability">Desktop app link is not configured yet. Your draft stays
+      here.</p>
     <div class="work-examples" aria-label="Task draft starters">
-      <button type="button" data-work-prompt="Help me outline a plan. Here is what I want to achieve: ">{{ icon('document') }}<strong>Outline a plan</strong><span>Start with a clear direction.</span></button>
-      <button type="button" data-work-prompt="Help me shape a document from these notes: ">{{ icon('edit') }}<strong>Shape a document</strong><span>Give your ideas a structure.</span></button>
-      <button type="button" data-work-prompt="Help me think through this problem and its tradeoffs: ">{{ icon('idea') }}<strong>Think it through</strong><span>Make room for a better approach.</span></button>
+      <button type="button" data-work-prompt="Help me outline a plan. Here is what I want to achieve: ">{{
+        icon('document') }}<strong>Outline a plan</strong><span>Start with a clear direction.</span></button>
+      <button type="button" data-work-prompt="Help me shape a document from these notes: ">{{ icon('edit')
+        }}<strong>Shape a document</strong><span>Give your ideas a structure.</span></button>
+      <button type="button" data-work-prompt="Help me think through this problem and its tradeoffs: ">{{ icon('idea')
+        }}<strong>Think it through</strong><span>Make room for a better approach.</span></button>
     </div>
   </div>
 </section>

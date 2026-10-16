@@ -1,19 +1,35 @@
 <div class="composer-dock">
-  <div id="notice" class="notice error composer-notice" role="status" hidden><span id="notice-message"></span><button type="button" class="icon-button" id="dismiss-notice" aria-label="Dismiss message">{{ icon('close',16) }}</button></div>
+  <div id="notice" class="notice error composer-notice" role="status" hidden><span id="notice-message"></span><button
+      type="button" class="icon-button" id="dismiss-notice" aria-label="Dismiss message">{{ icon('close',16) }}</button>
+  </div>
   <form class="composer chat-composer glass" id="chat-form">
-    <div id="attachment" class="attachment" hidden><span></span><button type="button" id="remove-image" class="icon-button" aria-label="Remove image">{{ icon('close',16) }}</button></div>
+    <div id="attachment" class="attachment" hidden><span></span><button type="button" id="remove-image"
+        class="icon-button" aria-label="Remove image">{{ icon('close',16) }}</button></div>
     <div class="composer-row">
       <input type="file" id="image-file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
-      <button type="button" class="icon-button" id="attach-image" aria-label="Open capabilities" aria-haspopup="menu" aria-controls="capability-menu" aria-expanded="false" title="Add to your conversation">{{ icon('plus') }}</button>
+      <button type="button" class="icon-button" id="attach-image" aria-label="Open capabilities" aria-haspopup="menu"
+        aria-controls="capability-menu" aria-expanded="false" title="Add to your conversation">{{ icon('plus')
+        }}</button>
       <label class="sr-only" for="message">Message Curio</label>
-      <textarea id="message" rows="1" maxlength="16000" placeholder="Ask Curio anything…" aria-describedby="composer-note voice-status"></textarea>
-      <button type="button" class="effort-button" id="chat-effort" data-effort-trigger aria-label="Thinking effort: Medium. Preference only, not applied to responses yet." aria-haspopup="menu" aria-controls="effort-menu" aria-expanded="false"><span data-effort-label>Medium</span>{{ icon('chevron',14) }}</button>
-      <button type="button" class="icon-button" id="microphone" aria-label="Dictate a message" title="Dictate a message" aria-pressed="false" aria-describedby="voice-status">{{ icon('mic') }}</button>
+      <textarea id="message" rows="1" maxlength="16000" placeholder="Ask Curio anything…"
+        aria-describedby="composer-note voice-status"></textarea>
+      <button type="button" class="effort-button" id="chat-effort" data-effort-trigger
+        aria-label="Thinking effort: Medium. Preference only, not applied to responses yet." aria-haspopup="menu"
+        aria-controls="effort-menu" aria-expanded="false"><span data-effort-label>Medium</span>{{ icon('chevron',14)
+        }}</button>
+      <button type="button" class="icon-button" id="microphone" aria-label="Dictate a message" title="Dictate a message"
+        aria-pressed="false" aria-describedby="voice-status">{{ icon('mic') }}</button>
       <div class="composer-action">
-        <button type="button" class="send-button composer-primary" id="open-live" aria-label="Open Curio Speak" aria-haspopup="dialog" aria-controls="live-dialog" title="Curio Speak — reviewable voice conversation">{{ icon('speak') }}</button>
-        <button type="submit" class="send-button composer-primary" id="send" aria-label="Send message" disabled hidden>{{ icon('arrow') }}</button>
+        <button type="button" class="send-button composer-primary" id="open-live" aria-label="Open Curio Speak"
+          aria-haspopup="dialog" aria-controls="live-dialog" title="Curio Speak — reviewable voice conversation">{{
+          icon('speak') }}</button>
+        <button type="submit" class="send-button composer-primary" id="send" aria-label="Send message" disabled
+          hidden>{{ icon('arrow') }}</button>
       </div>
     </div>
   </form>
-  <div class="composer-feedback"><p class="composer-note" id="composer-note" role="status"></p><p class="voice-status" id="voice-status" role="status" hidden></p></div>
+  <div class="composer-feedback">
+    <p class="composer-note" id="composer-note" role="status"></p>
+    <p class="voice-status" id="voice-status" role="status" hidden></p>
+  </div>
 </div>

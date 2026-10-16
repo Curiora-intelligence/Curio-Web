@@ -1,12 +1,19 @@
 <dialog id="live-dialog" class="dialog live-dialog" aria-labelledby="live-title" aria-describedby="speak-description">
-  <div class="dialog-header"><h2 id="live-title">Curio Speak</h2><button class="icon-button" id="close-live" aria-label="Close Curio Speak">{{ icon('close') }}</button></div>
-  <p class="helper" id="speak-description">Dictate a thought, review it, then send. Curio keeps the conversation in your chat.</p>
+  <div class="dialog-header">
+    <h2 id="live-title">Curio Speak</h2><button class="icon-button" id="close-live" aria-label="Close Curio Speak">{{
+      icon('close') }}</button>
+  </div>
+  <p class="helper" id="speak-description">Dictate a thought, review it, then send. Curio keeps the conversation in your
+    chat.</p>
   <p class="speak-state" id="live-state" role="status">Ready when you are.</p>
   <form id="live-form" class="live-composer">
     <label class="sr-only" for="live-message">Your question for Curio Speak</label>
     <textarea id="live-message" class="input" maxlength="16000" rows="3" placeholder="What’s on your mind?"></textarea>
-    <div class="row"><button type="button" class="secondary" id="live-microphone" aria-pressed="false">{{ icon('mic',16) }} Dictate</button><span class="spacer"></span><button type="submit" class="primary" id="live-send" disabled>Send question {{ icon('arrow',16) }}</button></div>
+    <div class="row"><button type="button" class="secondary" id="live-microphone" aria-pressed="false">{{ icon('mic',16)
+        }} Dictate</button><span class="spacer"></span><button type="submit" class="primary" id="live-send"
+        disabled>Send question {{ icon('arrow',16) }}</button></div>
   </form>
   <div id="live-answer" class="live-answer" aria-live="polite"></div>
-  <p class="helper">This web experience uses editable transcripts and optional spoken replies, not real-time speech-to-speech. Dictation depends on your browser. Enable spoken replies in profile settings.</p>
+  <p class="helper">This web experience uses editable transcripts and optional spoken replies, not real-time
+    speech-to-speech. Dictation depends on your browser. Enable spoken replies in profile settings.</p>
 </dialog>

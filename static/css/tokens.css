@@ -22,19 +22,21 @@
   --focus-neutral: #737377;
   --status-error: #b42318;
   --status-success: #187346;
-  --glass-background: rgba(255,255,255,.72);
-  --glass-border: rgba(0,0,0,.065);
-  --glass-highlight: rgba(255,255,255,.25);
-  --popover-background: rgba(250,250,249,.94);
+  --glass-background: rgba(255, 255, 255, .72);
+  --glass-border: rgba(0, 0, 0, .065);
+  --glass-highlight: rgba(255, 255, 255, .25);
+  --popover-background: rgba(250, 250, 249, .94);
+  --primary-fill: #0071e3;
+  --primary-ink: #ffffff;
   --primary-hover: #0877e6;
   --primary-pressed: #0065cc;
   --primary-border-hover: #4395e8;
-  --shadow-primary-hover: 0 2px 7px rgba(0,113,227,.16);
-  --shadow-popover: 0 12px 36px rgba(0,0,0,.12);
-  --overlay-background: rgba(0,0,0,.32);
-  --shadow-soft: 0 2px 6px rgba(0,0,0,.04);
-  --shadow-elevated: 0 6px 24px rgba(0,0,0,.045);
-  --shadow-dialog: 0 24px 72px rgba(0,0,0,.18);
+  --shadow-primary-hover: 0 2px 7px rgba(0, 113, 227, .16);
+  --shadow-popover: 0 12px 36px rgba(0, 0, 0, .12);
+  --overlay-background: rgba(0, 0, 0, .32);
+  --shadow-soft: 0 2px 6px rgba(0, 0, 0, .04);
+  --shadow-elevated: 0 6px 24px rgba(0, 0, 0, .045);
+  --shadow-dialog: 0 24px 72px rgba(0, 0, 0, .18);
   --code-background: #f0f0f2;
   --scrollbar-thumb: #b1b1b6;
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", "Segoe UI", Arial, sans-serif;
@@ -51,12 +53,12 @@
   --space-4: 16px;
   --space-6: 24px;
   --space-8: 32px;
-  --hover-field: rgba(0,0,0,.035);
-  --hover-border: rgba(0,0,0,.09);
-  --tide-color: rgba(0,113,227,.10);
+  --hover-field: rgba(0, 0, 0, .035);
+  --hover-border: rgba(0, 0, 0, .09);
+  --liquid-density: rgba(0, 113, 227, .035);
   --duration-fast: 180ms;
   --duration-mode: 320ms;
-  --ease-standard: cubic-bezier(.22,.61,.36,1);
+  --ease-standard: cubic-bezier(.22, .61, .36, 1);
   --sidebar-width: 268px;
   --content-width: 770px;
   /* Compatibility with retained memory and Speak components. */
@@ -67,6 +69,7 @@
   --soft: var(--surface-primary);
   --danger: var(--status-error);
 }
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background-primary: #0c0c0c;
@@ -89,22 +92,23 @@
     --focus-neutral: #a0a0a3;
     --status-error: #ff9a91;
     --status-success: #78d69d;
-    --glass-background: rgba(25,25,25,.72);
-    --glass-border: rgba(255,255,255,.065);
-    --glass-highlight: rgba(255,255,255,.025);
-    --popover-background: rgba(25,25,25,.96);
-    --shadow-popover: 0 12px 36px rgba(0,0,0,.32);
-    --overlay-background: rgba(0,0,0,.6);
-    --shadow-soft: 0 2px 6px rgba(0,0,0,.12);
-    --shadow-elevated: 0 8px 30px rgba(0,0,0,.12);
-    --hover-field: rgba(255,255,255,.045);
-    --hover-border: rgba(255,255,255,.10);
-    --tide-color: rgba(93,168,255,.12);
-    --primary-hover: #68adfb;
-    --primary-pressed: #5298e8;
-    --primary-border-hover: #8dbfff;
-    --shadow-primary-hover: 0 2px 8px rgba(93,168,255,.14);
-    --shadow-dialog: 0 24px 72px rgba(0,0,0,.4);
+    --glass-background: rgba(25, 25, 25, .72);
+    --glass-border: rgba(255, 255, 255, .065);
+    --glass-highlight: rgba(255, 255, 255, .025);
+    --popover-background: rgba(25, 25, 25, .96);
+    --shadow-popover: 0 12px 36px rgba(0, 0, 0, .32);
+    --overlay-background: rgba(0, 0, 0, .6);
+    --shadow-soft: 0 2px 6px rgba(0, 0, 0, .12);
+    --shadow-elevated: 0 8px 30px rgba(0, 0, 0, .12);
+    --hover-field: rgba(255, 255, 255, .045);
+    --hover-border: rgba(255, 255, 255, .10);
+    --liquid-density: rgba(93, 168, 255, .045);
+    --primary-fill: #1479e8;
+    --primary-hover: #217fe9;
+    --primary-pressed: #086bd4;
+    --primary-border-hover: #4395e8;
+    --shadow-primary-hover: 0 2px 8px rgba(93, 168, 255, .14);
+    --shadow-dialog: 0 24px 72px rgba(0, 0, 0, .4);
     --code-background: #181818;
     --scrollbar-thumb: #5d5d63;
   }

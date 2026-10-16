@@ -6,31 +6,41 @@
   <main class="main" id="main">
     <header class="topbar">
       <div class="top-left">
-        <button class="icon-button sidebar-open-button" id="menu" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">{{ icon('panel') }}</button>
+        <button class="icon-button sidebar-open-button" id="menu" aria-label="Open navigation" aria-controls="sidebar"
+          aria-expanded="false">{{ icon('panel') }}</button>
         <span class="top-wordmark">Curio</span><span id="page-label" class="sr-only">A fresh conversation</span>
       </div>
       <div class="mode-switch" data-workspace="chat" role="tablist" aria-label="Workspace">
         <span class="mode-indicator" aria-hidden="true"></span>
         <button id="chat-tab" role="tab" type="button" aria-selected="true" aria-controls="chat-panel">Chat</button>
-        <button id="work-tab" role="tab" type="button" aria-selected="false" aria-controls="work-panel" tabindex="-1">Work</button>
+        <button id="work-tab" role="tab" type="button" aria-selected="false" aria-controls="work-panel"
+          tabindex="-1">Work</button>
       </div>
       <div class="top-right">
         <div class="header-utility">
-          <button type="button" id="temporary-chat" class="icon-button" aria-label="Temporary chat" aria-disabled="true" aria-describedby="temporary-chat-help" title="Temporary chat">{{ icon('temporary') }}</button>
-          <span id="temporary-chat-help" class="utility-hint" role="tooltip">Not available yet. Chats continue to use normal history and memory.</span>
+          <button type="button" id="temporary-chat" class="icon-button" aria-label="Temporary chat" aria-disabled="true"
+            aria-describedby="temporary-chat-help" title="Temporary chat">{{ icon('temporary') }}</button>
+          <span id="temporary-chat-help" class="utility-hint" role="tooltip">Not available yet. Chats continue to use
+            normal history and memory.</span>
         </div>
       </div>
     </header>
     <section id="chat-panel" class="workspace chat-panel empty" role="tabpanel" aria-labelledby="chat-tab">
       <div class="chat-stage empty" id="chat-stage" tabindex="0" aria-label="Conversation">
-        <div class="welcome" id="welcome"><h1>Where should we begin?</h1></div>
-        <div id="messages" class="messages" role="log" aria-label="Chat messages" aria-live="polite" aria-relevant="additions text"></div>
+        <div class="welcome" id="welcome">
+          <h1>Where should we begin?</h1>
+        </div>
+        <div id="messages" class="messages" role="log" aria-label="Chat messages" aria-live="polite"
+          aria-relevant="additions text"></div>
       </div>
       {% include 'components/composer.html' %}
       <div class="quick-actions" aria-label="Conversation starters">
-        <button type="button" data-prompt="Help me write or edit a piece of text. Ask me what I am working on.">{{ icon('edit',18) }}<span>Write or edit</span></button>
-        <button type="button" data-prompt="Help me understand a topic. Ask me what I would like to learn.">{{ icon('document',18) }}<span>Understand a topic</span></button>
-        <button type="button" data-prompt="Help me explore an idea and think through its possibilities.">{{ icon('idea',18) }}<span>Explore an idea</span></button>
+        <button type="button" data-prompt="Help me write or edit a piece of text. Ask me what I am working on.">{{
+          icon('edit',18) }}<span>Write or edit</span></button>
+        <button type="button" data-prompt="Help me understand a topic. Ask me what I would like to learn.">{{
+          icon('document',18) }}<span>Understand a topic</span></button>
+        <button type="button" data-prompt="Help me explore an idea and think through its possibilities.">{{
+          icon('idea',18) }}<span>Explore an idea</span></button>
       </div>
     </section>
     {% include 'components/work.html' %}
@@ -43,11 +53,15 @@
 {% include 'components/live_modal.html' %}
 {% include 'components/composer_menus.html' %}
 <dialog id="settings-dialog" class="dialog" aria-labelledby="settings-title">
-  <div class="dialog-header"><h2 id="settings-title">Settings</h2><button class="icon-button" data-close="settings-dialog" aria-label="Close settings">{{ icon('close') }}</button></div>
+  <div class="dialog-header">
+    <h2 id="settings-title">Settings</h2><button class="icon-button" data-close="settings-dialog"
+      aria-label="Close settings">{{ icon('close') }}</button>
+  </div>
   <p class="helper" id="identity-description"></p>
   <label class="field-label" for="user-id">Identity</label><input id="user-id" class="input" readonly>
   <button class="secondary" id="sign-in" type="button" hidden>Sign in</button>
-  <div class="settings-section"><h3>Conversation</h3>
+  <div class="settings-section">
+    <h3>Conversation</h3>
     <button type="button" id="voice-toggle" class="secondary" aria-pressed="false">Voice replies OFF</button>
     <label class="check-label"><input id="show-inspector" type="checkbox" checked> Show confirmed activity</label>
     <p class="helper">Only stages and tool activity reported by Curio are shown.</p>

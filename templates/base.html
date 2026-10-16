@@ -1,18 +1,21 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#fafaf9" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#0c0c0c" media="(prefers-color-scheme: dark)">
   <meta name="description" content="Curio, your AI workspace by Curiora.">
-  <title>Curio · Curiora</title>
+  <title>Curio</title>
   <link rel="icon" href="{{ url_for('static', path=static_version + '/img/curio.svg') }}" type="image/svg+xml">
   {% for sheet in ['tokens', 'base', 'materials', 'app', 'chat', 'memory', 'live'] %}
   <link rel="stylesheet" href="{{ url_for('static', path=static_version + '/css/' + sheet + '.css') }}">
   {% endfor %}
 </head>
+
 <body>
   {% from 'components/icons.html' import icon %}
   {% block content %}{% endblock %}
@@ -20,4 +23,5 @@
   <script id="curio-config" type="application/json">{{ config | tojson }}</script>
   <script type="module" src="{{ url_for('static', path=static_version + '/js/app.js') }}"></script>
 </body>
+
 </html>

@@ -16,3 +16,11 @@ window.SpeechRecognition = class {
   start(){window.__recognition=this;}
   stop(){this.onend?.();}
 };
+
+// Test OS preference changes without touching the user's system settings.
+const nativeMatchMedia = window.matchMedia.bind(window);
+const motionQuery = new EventTarget();
+motionQuery.matches = false;
+motionQuery.media = '(prefers-reduced-motion: reduce)';
+window.matchMedia = query => query === motionQuery.media ? motionQuery : nativeMatchMedia(query);
+window.__setReducedMotion = matches => { motionQuery.matches = matches; motionQuery.dispatchEvent(new Event('change')); };

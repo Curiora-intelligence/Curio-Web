@@ -1,3 +1,67 @@
+# Liquid capsule and voice icon refinement — 16 October 2026
+
+Implemented directly in `/Users/saiganeshsattenapalli/my projects/Curiora/Curio-Web` on existing `main`, HEAD `f4a8305`. No branch, worktree, clone, commit or push was created. Nothing is staged. The starting diff and source snapshot are saved in `test-results/liquid-start.diff` and `liquid-start-files.json`.
+
+Existing auth/template edits were not edited by this task. Additional CSS formatting, title/brand edits and a standalone `uvicorn` import in `main.py` appeared during the work and were retained. The complete working-tree diff includes those changes; do not treat it as exclusively this task's patch. This task did not edit production API, streaming, recovery, memory or voice transport code.
+
+## Implemented behavior
+
+- A single selected indicator deforms over 320ms. Independent leading/trailing edges stretch it to about 1.45× its resting width, flow across the center, then recover the exact rounded resting geometry. A small vertical compression and directional radii soften the shape. Shell and labels remain fixed.
+- Rapid reversal starts from the currently rendered shape before the prior animation is cancelled. Completion, resize, page exit and reduced-motion changes settle deterministically. There is no continuous animation loop or animation framework.
+- Deleted the previous blue-tide pseudo-element, both tide keyframes and the rigid slide transition. A static, faint density gradient now belongs to the moving material itself. Motion stays clipped inside the shell without an external halo.
+- Speak uses opaque white strokes in both themes. Dedicated composer blue tokens maintain icon contrast; five bars make one coordinated 300ms response with 0/35/70ms stagger. Outer bars grow, inner bars contract, and all return to rest inside the icon bounds. Send retains its restrained 1.5px lift. Reduced motion keeps the icons static.
+- Removed the textarea's inset focus underline at its source. Keyboard focus uses a neutral 2px composer perimeter outline with 2px offset; buttons retain their own focus rings. The approved layout is unchanged.
+
+## Verification
+
+| Check | Result |
+| --- | --- |
+| Python `pytest -q` | 7 passed |
+| Node placeholder unit tests | 6 passed |
+| Functional browser checks | 88 passed |
+| Theme, layout and motion checks | 462 passed |
+| JavaScript syntax and Git diff whitespace | Passed |
+| Versioned assets | All 21 unique assets returned 200 |
+| Application console/unhandled errors in functional run | None |
+
+Theme checks run light/dark at 390, 768, 1024 and 1440px. Motion checks inspect both directions every 16ms across 320ms, assert leading-edge deformation and trailing-edge recovery, stable labels, containment, final alignment, stopped animation, rapid reversals, and reduced motion requested during travel. Functional checks cover drafts, action switching, menus, attachments, submission, SSE/recovery, history, memory, dictation and the supported Speak WebSocket contract. One browser idle-placeholder observation was skipped because of focus/visibility; all six deterministic placeholder tests passed.
+
+Manual inspection verified white waveform strokes, one-shot bar transforms during hover, a stationary action button, Send's upward lift, keyboard Tab focus, mobile drawer opening/Escape dismissal and no horizontal overflow at 390×844. Desktop screenshots use the actual templates with real backend configuration and an unsigned-in empty account; they do not substitute fixture conversations.
+
+The test harness at `/motion-tests` contains a visible scrubber that drives the actual production tabs and pauses their actual Web Animations API object. It does not reproduce the animation in a mockup. `/theme-tests` and `/browser-tests` remain development-only routes and are not imported by the production app.
+
+## Review evidence
+
+- [Motion recording](../test-results/liquid-motion.mp4): 15-second H.264 video made from 84 actual browser captures (21 frames × two directions × two themes). Includes 320ms playback and 4× slower replay. It is a frame-stepped browser capture, not a continuous desktop recording or a performance benchmark.
+- [Frame contact sheet](../test-results/liquid-frame-sheet.jpg): rest, stretch, flow, recovery and settled frames.
+- Desktop: [dark](../test-results/liquid-dark-desktop.jpg), [light](../test-results/liquid-light-desktop.jpg).
+- Mobile: [dark](../test-results/liquid-dark-mobile.jpg), [light](../test-results/liquid-light-mobile.jpg).
+- Keyboard focus: [dark](../test-results/liquid-dark-keyboard-focus.jpg), [light](../test-results/liquid-light-keyboard-focus.jpg).
+- Waveform during hover: [dark](../test-results/liquid-waveform-dark.jpg), [light](../test-results/liquid-waveform-light.jpg). These inspection captures use the controlled test account.
+- [Unit/syntax results](../test-results/liquid-unit-checks.txt), [functional results](../test-results/liquid-browser-checks.txt), [theme/motion results](../test-results/liquid-theme-checks.txt), [application console](../test-results/liquid-console.json).
+- [Complete working-tree Git diff, including new files](../test-results/liquid-working-tree.diff).
+
+System theme and reduced-motion queries were emulated only inside the test harness; no operating-system preferences changed. Physical microphone/speech services, real authenticated inference, physical mobile keyboards and assistive technology were not exercised. The in-app browser capture does not establish performance on every browser/device. Saved evidence lives in the existing ignored `test-results` directory.
+
+## Files changed by this task
+
+- `static/css/app.css` — selected surface and clipped stationary shell.
+- `static/css/base.css` — zero mode duration with reduced motion.
+- `static/css/chat.css` — perimeter focus, white primary icons and waveform motion.
+- `static/css/tokens.css` — restrained liquid density and dedicated primary colors.
+- `static/js/motion.js` (new) — interruptible capsule geometry.
+- `static/js/shell.js` — presentation-only integration.
+- `tests/motion_checks.js` (new) — frame checks and visible scrubber.
+- `tests/theme_checks.js` — geometry, contrast and focus assertions.
+- `tests/browser_setup.js` — controllable reduced-motion query for verification.
+- `tests/serve_browser.py` — development-only motion route.
+- `tests/browser_checks.js` — normalize whitespace in a formatted capability label assertion; application template retained.
+- `docs/design-system.md` and `docs/validation.md` — current behavior and verification.
+
+Earlier reports below describe historical visual states.
+
+---
+
 # Liquid Glass motion correction — 15 October 2026
 
 Original checkout: `/Users/saiganeshsattenapalli/my projects/Curiora/Curio-Web`, existing `main`. Before editing, the complete working-tree diff matched `polish-working-tree.diff`, including prior untracked files. All earlier work was preserved. No branch, folder, worktree, clone, commit or push was created.

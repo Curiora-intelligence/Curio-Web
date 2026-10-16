@@ -1,1 +1,17 @@
-<dialog id="auth-dialog" class="dialog" aria-labelledby="auth-title"><div class="dialog-header"><h2 id="auth-title">Sign in to Curio</h2><button class="icon-button" data-close="auth-dialog" aria-label="Close sign in">{{ icon('close') }}</button></div><p class="helper">Use your Curio account to access your conversations and memories.</p><form id="auth-form"><label class="field-label">Email<input class="input" name="email" type="email" required autocomplete="username" maxlength="254"></label><label class="field-label">Password<input class="input" name="password" type="password" required minlength="12" maxlength="128" autocomplete="current-password"></label><div id="registration-fields" hidden><label class="field-label">Name<input class="input" name="name" maxlength="120" autocomplete="name"></label><input type="hidden" name="role" value="USER"></div><p id="auth-error" role="alert" class="notice error" hidden></p><div class="row"><button class="primary" type="submit" id="auth-submit">Sign in</button><button class="text-button" type="button" id="auth-switch">Create an account</button></div></form></dialog>
+<dialog id="auth-dialog" class="dialog" aria-labelledby="auth-title">
+    <div class="dialog-header">
+        <h2 id="auth-title">Sign in to Curio</h2><button class="icon-button" data-close="auth-dialog"
+            aria-label="Close sign in">{{ icon('close') }}</button>
+    </div>
+    <p class="helper">Use your Curio account to access your conversations and memories.</p>
+    <form id="auth-form"><label class="field-label">Email<input class="input" name="email" type="email" required
+                autocomplete="username" maxlength="254"></label><label class="field-label">Password<input class="input"
+                name="password" type="password" required minlength="12" maxlength="128"
+                autocomplete="current-password"></label>
+        <div id="registration-fields" hidden><label class="field-label">Name<input class="input" name="name"
+                    maxlength="120" autocomplete="name"></label><input type="hidden" name="role" value="USER"></div>
+        <p id="auth-error" role="alert" class="notice error" hidden></p>
+        <div class="row"><button class="primary" type="submit" id="auth-submit">Sign in</button><button
+                class="text-button" type="button" id="auth-switch">Create an account</button></div>
+    </form>
+</dialog>

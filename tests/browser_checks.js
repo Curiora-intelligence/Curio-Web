@@ -24,7 +24,7 @@ ok($('#microphone').getClientRects().length&&$('#chat-effort').getClientRects().
 const picker=$('#image-file'),originalClick=picker.click;let pickerCalls=0;picker.click=()=>pickerCalls++;
 $('#attach-image').click();ok(!$('#capability-menu').hidden&&pickerCalls===0&&$('#attach-image').getAttribute('aria-expanded')==='true','plus opens capabilities without opening the file picker');
 const menuItems=[...$('#capability-menu').querySelectorAll('[role="menuitem"]')];
-ok(menuItems.map(item=>item.querySelector('.capability-title').childNodes[0].textContent.trim()).join('|')==='Add photos & files|Add from library|Create image|Web search|GitHub|Gmail','capabilities form one flat list in the requested order');
+ok(menuItems.map(item=>item.querySelector('.capability-title').childNodes[0].textContent.replace(/\s+/g,' ').trim()).join('|')==='Add photos & files|Add from library|Create image|Web search|GitHub|Gmail','capabilities form one flat list in the requested order');
 ok(document.activeElement===$('#upload-image')&&menuItems.slice(1).every(item=>item.getAttribute('aria-disabled')==='true'),'menu focuses upload and marks unverified integrations unavailable');
 const key=name=>document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{key:name,bubbles:true,cancelable:true}));
 key('ArrowDown');ok(document.activeElement===menuItems[1],'arrow navigation reaches unavailable items to read their descriptions');menuItems[1].click();ok(pickerCalls===0&&!$('#capability-menu').hidden,'unavailable items have no fabricated action');

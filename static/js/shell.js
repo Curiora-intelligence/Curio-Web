@@ -1,5 +1,6 @@
 import {initTypingPlaceholder} from './placeholder.js';
 import {initComposerControls} from './composer.js';
+import {initLiquidSelection} from './motion.js';
 
 // Presentation state only. Workspace navigation never owns or cancels chat runs.
 export function initShell() {
@@ -45,12 +46,9 @@ export function initShell() {
   utility.addEventListener('pointerenter', () => utility.classList.remove('hint-dismissed'));
   document.addEventListener('keydown', event => { if (event.key === 'Escape') utility.classList.add('hint-dismissed'); });
 
-  const modeSwitch = $('.mode-switch');
+  const selectMode = initLiquidSelection($('.mode-switch'));
   function workspace(name, focus = false) {
-    if (modeSwitch.dataset.workspace !== name) {
-      modeSwitch.classList.add('has-switched');
-      modeSwitch.dataset.workspace = name;
-    }
+    selectMode(name);
     for (const kind of ['chat','work']) {
       const selected = kind === name;
       const tab = $(`#${kind}-tab`);

@@ -27,6 +27,16 @@ async def checks(): return FileResponse(ROOT/'tests/browser_checks.js', media_ty
 @app.get('/__test/theme.js')
 async def theme_checks(): return FileResponse(ROOT/'tests/theme_checks.js', media_type='text/javascript', headers={'Cache-Control':'no-cache'})
 
+@app.get('/__test/motion.js')
+async def motion_checks(): return FileResponse(ROOT/'tests/motion_checks.js', media_type='text/javascript', headers={'Cache-Control':'no-cache'})
+
+@app.get('/motion-tests', response_class=HTMLResponse)
+async def motion_viewer():
+    revision = sha256((ROOT/'tests/motion_checks.js').read_bytes()).hexdigest()[:12]
+    return HTMLResponse(f"""<!doctype html><title>Curio liquid motion inspection</title>
+    <style>body{{margin:0;font:13px system-ui;background:#eee;color:#222}}header{{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:16px}}button,select,input{{font:inherit;padding:6px}}input{{width:62px}}iframe{{display:block;width:100%;height:650px;border:0}}</style>
+    <body><script type="module" src="/__test/motion.js?v={revision}"></script></body>""", headers={'Cache-Control':'no-cache'})
+
 @app.get('/__test/tokens.css')
 async def theme(appearance: str = 'dark'):
     # Browser automation has no OS-media override. Test styles emulate its CSS query only.

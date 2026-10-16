@@ -14,6 +14,7 @@ The approved HTML preview and supplied ChatGPT Chat/Work screenshots determine s
 - `memory.css`, `live.css`: retained component surfaces.
 - Jinja partials: sidebar, composer, Work, icons, memory and Speak.
 - `shell.js`: workspace selection, responsive drawer/focus, draft preservation and textarea sizing. It has no transport dependencies.
+- `motion.js`: one interruptible selected capsule; leading/trailing-edge geometry, settlement, resize and reduced-motion handling. No chat or network state.
 - `composer.js`: flat capability menu, keyboard/focus/viewport handling and persistent effort preference; no transport dependencies.
 - `chat.js`: conversation/history, submission and accepted-run ownership.
 - `api.js`, `sse.js`: unchanged HTTP/multipart and event/recovery contracts.
@@ -30,7 +31,9 @@ The approved HTML preview and supplied ChatGPT Chat/Work screenshots determine s
 | Primary text | `#111318` | `#eeeeef` |
 | Secondary text | `#68686d` | `#a0a0a3` |
 | Action blue | `#0071e3` | `#5da8ff` |
-| Text on blue | `#ffffff` | `#0c1524` |
+| Text on shared accent | `#ffffff` | `#0c1524` |
+| Composer primary fill | `#0071e3` | `#1479e8` |
+| Composer primary icon | `#ffffff` | `#ffffff` |
 
 Secondary text uses accessible neutral grays in both appearances. `--accent-text` is a separate accessible link color. Input boundaries use `--border-control`; layout separators use the quieter `--border-subtle`.
 
@@ -46,11 +49,13 @@ Both effort triggers share Low / Medium / High, default Medium, saved under `cur
 
 The 15 October refinement keeps the geometry intact while using a warm near-white canvas, layered white controls and neutral near-black dark surfaces. Glass borders are softened independently of accessible input boundaries and focus rings. Shared `--hover-field` and `--hover-border` tokens provide quiet neutral responses for utility icons, sidebar items and quick actions. Blue remains reserved for primary actions and meaningful focus/selection.
 
-The selected Chat/Work capsule travels in 320ms using Campus's standard easing. Its clipped pseudo-element is a shallow curved volume of muted translucent blue. During a switch it shifts toward the leading side and tilts up by 7 degrees, then levels and settles to 22% opacity of an already faint color token (effective resting alpha around 2–3%). Reverse selection uses the mirrored keyframes. There are no gradients, specular sweeps, outside halos, loops or JavaScript timers. Existing workspace state selects the direction; CSS transitions retarget interrupted travel during rapid switching.
+The selected Chat/Work capsule is one persistent material surface animated over 320ms with the Web Animations API. Its leading edge extends first, its center follows, and its trailing edge catches up. Five geometry keyframes interpolate bounded left/right edges, a small vertical compression and directional corner radii. Width reaches about 1.45 times its resting width, then returns to the exact destination segment. Labels and the outer shell stay fixed. A static, extremely faint blue density gradient belongs to the deforming surface; there is no independent moving highlight, tide pseudo-element, outside shadow, bounce or continuous frame loop.
 
-Primary actions have a slightly brighter blue border and a compact 7–8px blue-tinted hover shadow. Pressed state darkens the surface without scaling. Speak strokes respond once over 280ms with 0/30/60ms stagger, then return to rest. Send lifts 1.5px and smoothly returns when hover ends. Motion requires a hover-capable pointer and no reduced-motion preference. Reduced motion removes travel, tide and icon movement while preserving immediate selected-state changes and static feedback.
+A reversal samples the visible geometry before cancelling the previous animation. The replacement begins at that shape; a guarded finish restores a stable rounded pill. Resize, page exit and a reduced-motion preference change settle immediately. CSS also sets the mode duration to zero for reduced motion. Workspace state, drafts and transports remain owned by their existing modules.
 
-The old primary reflection pseudo-element/keyframes, mode light-sweep gradients and composer-wide blue focus halo were removed. The input uses a neutral 2px focus-visible underline with at least 3:1 contrast; child buttons keep their own visible focus outlines. Hovering or focusing a child never adds a blue shadow to the composer. Neutral glass edge highlights are reduced in both appearances.
+Composer primary icons use opaque white in both appearances, with dedicated blue fill tokens that keep at least 3:1 icon contrast. Existing compact 7–8px hover shadows and pressed feedback remain. Speak bars respond once over 300ms with 0/35/70ms delays: the short outer bars grow while the inner bars contract, staying within the existing icon. Send retains its 1.5px upward lift. These effects require a hover-capable pointer and no reduced-motion preference; otherwise icons remain static.
+
+The unintended horizontal composer line came from the textarea's inset focus shadow. That shadow is removed. Textarea keyboard focus now outlines the composer perimeter with a neutral 2px ring and 2px offset; child buttons retain their own focus outlines. Composer geometry, glass, neutral surfaces and blue focus feedback for controls are preserved.
 Effort text is 14px, medium weight, with aligned chevrons and more breathing room in both composers. Quick actions use 13px text with neutral rounded hover surfaces. Neither change affects submission or inference.
 
 The top-right Temporary Chat button is an `aria-disabled` presentation shell, still keyboard-discoverable. Its native title is “Temporary chat”; its accessible description and hover/focus explanation state that it is unavailable and that normal history and memory still apply. Escape dismisses the explanation. No temporary-session state, retention promise or backend request exists.
@@ -65,7 +70,7 @@ Keep future manual preference support separate from these semantic values; it is
 
 Chat and Work are tab panels with a keyboard-operable tablist. Arrow keys, Home and End select tabs. A view switch never touches a run watcher or resets a draft. Unsupported Work controls use native disabled states and explanatory text. The desktop handoff is explicitly unavailable until a verified destination is supplied; it does not copy or submit a draft.
 
-The mobile drawer makes the background inert, traps Tab, supports Escape and returns focus to its opener. Native dialogs provide focus containment. Textareas use an input-only neutral focus underline and retain IME-safe Enter/Shift+Enter behavior. `100dvh`, safe-area padding and visual viewport height keep the application bounded and help accommodate software keyboards; real mobile keyboard checks remain necessary.
+The mobile drawer makes the background inert, traps Tab, supports Escape and returns focus to its opener. Native dialogs provide focus containment. Textareas use a neutral focus outline around the composer perimeter and retain IME-safe Enter/Shift+Enter behavior. `100dvh`, safe-area padding and visual viewport height keep the application bounded and help accommodate software keyboards; real mobile keyboard checks remain necessary.
 
 Messages, code and tables are independently scrollable within the main column. Content is built with DOM text nodes; raw HTML is never inserted by the Markdown renderer. All component transitions respect reduced motion. The only idle animation is the typing placeholder; reduced motion renders static text. It never changes an input value or its accessible label. There are no ambient animation effects.
 
