@@ -14,6 +14,7 @@
   {% for sheet in ['tokens', 'base', 'materials', 'app', 'chat', 'memory', 'live'] %}
   <link rel="stylesheet" href="{{ url_for('static', path=static_version + '/css/' + sheet + '.css') }}">
   {% endfor %}
+  <link rel="stylesheet" href="{{ url_for('static', path=static_version + '/curiora/controls.css') }}">
 </head>
 
 <body>

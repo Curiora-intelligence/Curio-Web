@@ -10,10 +10,14 @@ from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, FileResponse, StreamingResponse, JSONResponse
 from app.core.assets import VersionedStaticFiles, asset_version
 from fastapi.templating import Jinja2Templates
+from starlette.staticfiles import StaticFiles
 
 ROOT = Path(__file__).resolve().parents[1]
 app = FastAPI()
 app.mount('/static', VersionedStaticFiles(directory=ROOT/'static'), name='static')
+# Only public source directories of the existing shared checkout are served locally.
+for directory in ('css','js','playground'):
+    app.mount('/design-system/'+directory, StaticFiles(directory=ROOT.parent/'Curiora-Design-System'/directory), name='curiora-'+directory)
 templates = Jinja2Templates(directory=ROOT/'templates')
 runs = {}
 submissions = []
@@ -36,6 +40,12 @@ async def motion_viewer():
     return HTMLResponse(f"""<!doctype html><title>Curio liquid motion inspection</title>
     <style>body{{margin:0;font:13px system-ui;background:#eee;color:#222}}header{{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:16px}}button,select,input{{font:inherit;padding:6px}}input{{width:62px}}iframe{{display:block;width:100%;height:650px;border:0}}</style>
     <body><script type="module" src="/__test/motion.js?v={revision}"></script></body>""", headers={'Cache-Control':'no-cache'})
+
+@app.get('/__test/controls.css')
+async def controls_css(appearance: str = 'dark'):
+    from fastapi.responses import Response
+    css=(ROOT/'static/curiora/controls.css').read_text().replace('(prefers-color-scheme: dark)', 'all' if appearance=='dark' else 'not all')
+    return Response(css,media_type='text/css')
 
 @app.get('/__test/tokens.css')
 async def theme(appearance: str = 'dark'):
@@ -61,6 +71,7 @@ async def page(request: Request, appearance: str = '', recovery: bool = False):
         html = html.replace('<head>', f'<head><script src="/__test/setup.js?v={revision}"></script>')
     if appearance in ('light','dark'):
         html = html.replace(str(request.url_for('static', path=asset_version() + '/css/tokens.css')), '/__test/tokens.css?appearance='+appearance)
+        html = html.replace(str(request.url_for('static', path=asset_version() + '/curiora/controls.css')), '/__test/controls.css?appearance='+appearance)
     if recovery:
         runs['recovered-run'] = {'answer':'Recovered answer', 'conversation_id':'recovered-conversation','user_id':'fixture-user','status':'completed','message':'recovery'}
     if request.url.path == '/browser-tests':
@@ -127,3 +138,38 @@ async def live(ws: WebSocket,user: str):
                 await asyncio.sleep(.4)
                 await ws.send_json({'type':'response','answer':'Live fixture answer','conversation_id':'live-conversation','user_id':user})
     except WebSocketDisconnect: pass
+
+@app.get('/__test/safari.js')
+async def safari_script():
+    return FileResponse(ROOT/'tests/safari_checks.js', media_type='text/javascript', headers={'Cache-Control':'no-cache'})
+
+@app.get('/safari-tests', response_class=HTMLResponse)
+async def safari_page(request: Request, appearance: str = 'dark', reduced: bool = False):
+    # The production templates and modules; only appearance CSS and a test toolbar differ.
+    from app.core.config import Settings
+    version=asset_version()
+    html=templates.env.get_template('index.html').render(request=request,config=Settings().browser_config(),static_version=version)
+    if appearance in ('light','dark'):
+        html=html.replace(str(request.url_for('static',path=version+'/css/tokens.css')),'/__test/tokens.css?appearance='+appearance)
+        html=html.replace(str(request.url_for('static',path=version+'/curiora/controls.css')),'/__test/controls.css?appearance='+appearance)
+    if reduced:
+        html=html.replace('<head>', """<head><script>
+        const nativeMatch=window.matchMedia.bind(window);
+        window.matchMedia=query=>{
+          const media=nativeMatch(query);
+          return query.includes('prefers-reduced-motion')?new Proxy(media,{get(target,key){if(key==='matches')return true;const v=target[key];return typeof v==='function'?v.bind(target):v;}}):media;
+        };
+        </script>""")
+    html=html.replace('</body>','<script type="module" src="/__test/safari.js"></script></body>')
+    return HTMLResponse(html,headers={'Cache-Control':'no-cache'})
+
+@app.post('/__test/safari-result')
+async def safari_result(request: Request, name: str):
+    # Local development evidence only, fixed names and bounded payloads.
+    if name not in ('baseline','diagnostic','light','dark','reduced'):
+        return JSONResponse({'error':'Unknown evidence name'},status_code=400)
+    body=await request.body()
+    if len(body)>1000000: return JSONResponse({'error':'Evidence too large'},status_code=413)
+    data=json.loads(body)
+    (ROOT/'test-results'/('safari-'+name+'.json')).write_text(json.dumps(data,indent=2))
+    return {'saved':True}

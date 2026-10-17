@@ -1,0 +1,107 @@
+/* Curiora interactions 1.0.0. Opt-in only; existing ecosystem surfaces are untouched. */
+.curiora-segmented, .curiora-primary, .curiora-component-scope {
+  --curiora-shell: #f3f3f2;
+  --curiora-liquid: #fff;
+  --curiora-edge: rgba(0,0,0,.065);
+  --curiora-highlight: rgba(255,255,255,.25);
+  --curiora-density: rgba(0,113,227,.035);
+  --curiora-label: #111318;
+  --curiora-secondary: #68686d;
+  --curiora-focus: #0071e3;
+  --curiora-blue: #0071e3;
+  --curiora-blue-hover: #0877e6;
+  --curiora-blue-pressed: #0065cc;
+  --curiora-blue-edge: #4395e8;
+  --curiora-liquid-duration: 360ms;
+  --curiora-voice-duration: 320ms;
+  --curiora-ease: cubic-bezier(.22,.61,.36,1);
+}
+@media (prefers-color-scheme: dark) {
+  .curiora-segmented, .curiora-primary, .curiora-component-scope {
+    --curiora-shell: #181818;
+    --curiora-liquid: #1c1c1c;
+    --curiora-edge: rgba(255,255,255,.065);
+    --curiora-highlight: rgba(255,255,255,.025);
+    --curiora-density: rgba(93,168,255,.045);
+    --curiora-label: #eeeeef;
+    --curiora-secondary: #a0a0a3;
+    --curiora-focus: #5da8ff;
+    --curiora-blue: #1479e8;
+    --curiora-blue-hover: #217fe9;
+    --curiora-blue-pressed: #086bd4;
+  }
+}
+/* Explicit appearances are for independent component previews or host-controlled themes. */
+[data-curiora-appearance="light"].curiora-component-scope .curiora-segmented,
+[data-curiora-appearance="light"].curiora-component-scope .curiora-primary {
+  --curiora-shell:#f3f3f2;--curiora-liquid:#fff;--curiora-edge:rgba(0,0,0,.065);
+  --curiora-highlight:rgba(255,255,255,.25);--curiora-density:rgba(0,113,227,.035);
+  --curiora-label:#111318;--curiora-secondary:#68686d;--curiora-focus:#0071e3;
+  --curiora-blue:#0071e3;--curiora-blue-hover:#0877e6;--curiora-blue-pressed:#0065cc;
+}
+[data-curiora-appearance="dark"].curiora-component-scope .curiora-segmented,
+[data-curiora-appearance="dark"].curiora-component-scope .curiora-primary {
+  --curiora-shell:#181818;--curiora-liquid:#1c1c1c;--curiora-edge:rgba(255,255,255,.065);
+  --curiora-highlight:rgba(255,255,255,.025);--curiora-density:rgba(93,168,255,.045);
+  --curiora-label:#eeeeef;--curiora-secondary:#a0a0a3;--curiora-focus:#5da8ff;
+  --curiora-blue:#1479e8;--curiora-blue-hover:#217fe9;--curiora-blue-pressed:#086bd4;
+}
+.curiora-segmented {
+  box-sizing:border-box;position:relative;isolation:isolate;display:flex;padding:3px;
+  overflow:hidden;max-width:100%;border:1px solid var(--curiora-edge);border-radius:999px;
+  background:var(--curiora-shell);box-shadow:inset 0 1px 0 var(--curiora-highlight);
+}
+.curiora-segmented > button {
+  position:relative;z-index:1;flex:1 1 0;min-width:0;min-height:var(--curiora-segment-height,32px);padding:0 10px;
+  border:0;border-radius:999px;background:transparent;
+  font-family:inherit;font-size:13px;line-height:1.2;font-weight:500;color:var(--curiora-secondary);
+  cursor:pointer;white-space:nowrap;
+}
+.curiora-segmented > button:is([aria-selected="true"],[aria-checked="true"],:hover) {color:var(--curiora-label);}
+.curiora-segmented > button:disabled {cursor:default;opacity:.5;}
+.curiora-segmented > button:focus-visible {outline:2px solid var(--curiora-focus);outline-offset:-2px;}
+.curiora-liquid {
+  position:absolute;z-index:0;pointer-events:none;inset:3px auto 3px 0;
+  width:calc((100% - 8px)/var(--curiora-segments,2));transform:translateX(3px);
+}
+.curiora-liquid > svg {display:block;width:100%;height:100%;overflow:visible;}
+.curiora-liquid path {fill:var(--curiora-liquid);stroke:var(--curiora-edge);stroke-width:1;}
+/* Density is a tint of the one surface, never an independently animated layer. */
+.curiora-liquid {color:var(--curiora-density);}
+.curiora-liquid path {fill:color-mix(in srgb,var(--curiora-liquid),var(--curiora-density) 45%);}
+.curiora-primary {
+  position:relative;box-sizing:border-box;display:inline-grid;place-items:center;
+  flex-shrink:0;width:var(--curiora-control-size,36px);height:var(--curiora-control-size,36px);
+  padding:0;border:1px solid transparent;border-radius:50%;background:var(--curiora-blue);color:#fff;
+  box-shadow:0 2px 6px rgba(0,0,0,.04);cursor:pointer;
+  transition:background 180ms var(--curiora-ease),border-color 180ms var(--curiora-ease);
+}
+.curiora-primary:disabled {cursor:default;opacity:.5;}
+.curiora-primary:focus-visible {outline:2px solid var(--curiora-focus);outline-offset:2px;}
+.curiora-primary:active:not(:disabled) {background:var(--curiora-blue-pressed);}
+.curiora-primary > svg {display:block;width:20px;height:20px;overflow:visible;}
+.curiora-voice-wave > path {transform-box:fill-box;transform-origin:center;}
+/* Static square means an active session can be stopped; motion is never the only state cue. */
+.curiora-voice:is([data-voice-state="ready"],[data-voice-state="listening"],[data-voice-state="responding"],[data-voice-state="speaking"])::after {
+  content:"";position:absolute;right:3px;bottom:3px;width:6px;height:6px;
+  border:1px solid var(--curiora-blue);border-radius:2px;background:#fff;
+}
+.curiora-voice:is([data-voice-state="listening"],[data-voice-state="speaking"]) {border-color:#fff;}
+@media (hover:hover) {
+  .curiora-primary:hover:not(:disabled) {background:var(--curiora-blue-hover);border-color:var(--curiora-blue-edge);}
+}
+@media (hover:hover) and (prefers-reduced-motion:no-preference) {
+  .curiora-voice:hover:not(:disabled) .curiora-voice-wave > path {--curiora-wave-height:2.1;animation:curiora-voice-response var(--curiora-voice-duration) var(--curiora-ease) 1;}
+  .curiora-voice:hover:not(:disabled) .curiora-voice-wave > path:nth-child(2),
+  .curiora-voice:hover:not(:disabled) .curiora-voice-wave > path:nth-child(4) {--curiora-wave-height:.56;animation-delay:35ms;}
+  .curiora-voice:hover:not(:disabled) .curiora-voice-wave > path:nth-child(3) {--curiora-wave-height:.62;animation-delay:70ms;}
+}
+@keyframes curiora-voice-response {0%,100%{transform:scaleY(1)}42%{transform:scaleY(var(--curiora-wave-height))}}
+@media (prefers-reduced-motion:reduce) {
+  .curiora-segmented {--curiora-liquid-duration:0ms;}
+  .curiora-primary, .curiora-primary * {animation:none!important;transition:none!important;}
+}
+[data-curiora-reduced="true"] .curiora-primary, [data-curiora-reduced="true"] .curiora-primary * {animation:none!important;transition:none!important;}
+[data-curiora-density="off"] .curiora-liquid path {fill:var(--curiora-liquid);}
+
+@media (max-width:760px) { .curiora-segmented { --curiora-segment-height:36px; } }

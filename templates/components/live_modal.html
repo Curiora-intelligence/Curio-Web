@@ -5,7 +5,10 @@
   </div>
   <p class="helper" id="speak-description">Dictate a thought, review it, then send. Curio keeps the conversation in your
     chat.</p>
-  <p class="speak-state" id="live-state" role="status">Ready when you are.</p>
+  <div class="speak-session">
+    <button type="button" id="speak-session-control" class="curiora-primary curiora-voice" aria-label="Stop and leave Curio Speak" title="Stop and leave Curio Speak">{{ icon('speak') }}</button>
+    <p class="speak-state" id="live-state" role="status">Ready when you are.</p>
+  </div>
   <form id="live-form" class="live-composer">
     <label class="sr-only" for="live-message">Your question for Curio Speak</label>
     <textarea id="live-message" class="input" maxlength="16000" rows="3" placeholder="What’s on your mind?"></textarea>

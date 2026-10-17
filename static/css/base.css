@@ -263,10 +263,6 @@ textarea::placeholder {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :root {
-    --duration-mode: 0ms;
-  }
-
   *,
   *::before,
   *::after {

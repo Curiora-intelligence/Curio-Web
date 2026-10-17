@@ -46,7 +46,7 @@ export function initShell() {
   utility.addEventListener('pointerenter', () => utility.classList.remove('hint-dismissed'));
   document.addEventListener('keydown', event => { if (event.key === 'Escape') utility.classList.add('hint-dismissed'); });
 
-  const selectMode = initLiquidSelection($('.mode-switch'));
+  const selectMode = initLiquidSelection($('.mode-switch'), name => workspace(name));
   function workspace(name, focus = false) {
     selectMode(name);
     for (const kind of ['chat','work']) {
@@ -60,15 +60,6 @@ export function initShell() {
     const textarea = name === 'chat' ? $('#message') : $('#work-message');
     textarea.dispatchEvent(new Event('input'));
     document.dispatchEvent(new CustomEvent('workspace-changed', {detail:name}));
-  }
-  for (const kind of ['chat','work']) {
-    const tab = $(`#${kind}-tab`);
-    tab.onclick = () => workspace(kind);
-    tab.onkeydown = event => {
-      if (['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) {
-        event.preventDefault(); workspace(event.key === 'Home' ? 'chat' : event.key === 'End' ? 'work' : kind === 'chat' ? 'work' : 'chat', true);
-      }
-    };
   }
   document.addEventListener('show-chat', () => workspace('chat'));
   for (const textarea of document.querySelectorAll('.composer textarea')) {

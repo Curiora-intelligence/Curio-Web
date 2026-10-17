@@ -1,3 +1,205 @@
+# Safari liquid control correction — 17 October 2026
+
+This section supersedes the earlier liquid-control compatibility and visual-acceptance claims below. Work was performed in the existing Curio-Web and Curiora-Design-System checkouts on `main`. No branch, worktree, clone, staging, commit or push was created. The pre-existing product changes, including both edits in `main.py`, were preserved byte for byte.
+
+## Confirmed root cause
+
+Actual macOS Safari **27.0.1** reported `CSS.supports('d', 'path(...)') === false`, while reduced motion was false, the configured duration was `360ms`, and `path.animate` existed. Version 1.0.0 therefore entered its explicit immediate-selection fallback. Across 26 sampled frames the old selected shape remained one contour with a constant 96px width; `data-curiora-motion` was already `rest` immediately after selecting Work.
+
+The loaded module's SHA-256 matched the 1.0.0 snapshot. Initialization was present, one indicator and one SVG path were rendered, and the shell/product adapter had reached the selection handler. This was the unsupported CSS-path gate, not a stale snapshot, reduced-motion setting, duplicate surface or missing initialization. The earlier browser checks did not establish Safari acceptance. [Baseline diagnostic](../test-results/safari-baseline.json).
+
+## Fix and ownership
+
+The shared Design System now interpolates position, width and all control points of the same eight connected cubic curves numerically. One bounded requestAnimationFrame loop writes the SVG `d` attribute and surface bounds together over 360ms. It starts on the first deliverable frame and stops at rest. No CSS `d` interpolation, native animation capability check, idle loop, extra surface or decorative effect is used.
+
+Reversals inherit the exact last painted position and numeric contour. A short, smooth decay releases the inherited contour displacement into the reverse deformation. Callback ownership and cancellation prevent an older transition from completing a newer one. Reduced motion and explicit zero duration settle immediately; resize, page exit and destroy cancel correctly. The initial ResizeObserver notification is ignored when shell dimensions have not changed.
+
+The existing controller API remains; the development-only `animations` getter now returns zero or one numerical inspection handle, not two native Web Animations. Its pause/play/finish/cancel/currentTime interface remains available to the shared playground. Product motion.js, shell.js, templates, CSS, voice, composer, backend and transport source were unchanged by this correction.
+
+## Pinned distribution
+
+- Release: **1.0.1**.
+- Snapshot SHA-256: `7f34ff37dd3536640732df5ec0186d850372a0575e204ca778a62b0e31190fe9`.
+- Shared liquid module SHA-256: `098c674fb10dd9e7cbbe318a8673c73585155f6ca108a948dcad11c00f287a0b`.
+- Loaded asset namespace: `/static/v-d8868066e9d0e21b/`.
+- Source base commit remains `d1134839e70d4352c0c397150f3057ac4348ecbe`; the content pin identifies the uncommitted correction without inventing a new commit.
+
+The documented sync script was missing at the start of this task. It was restored from the prior saved patch, then used to regenerate and verify the snapshot. Safari independently fetched and hashed its loaded module and matched it against the new manifest in both appearances. The existing asset pipeline and relative imports are unchanged.
+
+## Native Safari visual acceptance
+
+The actual production Jinja templates and modules ran at `/safari-tests` with the real application configuration. A development-only toolbar selects appearance, triggers the real Chat/Work buttons and samples the real SVG. No replacement component is rendered. The theme query affects only test CSS; the OS appearance is unchanged.
+
+Both light and dark sequences passed forward motion, reverse motion, visible extension, final alignment and rapid-reversal continuity. Each forward transition painted 21 distinct path values; each reverse transition painted 22. The surface grows from 96px to approximately 118.6px, then returns to 96px. Labels and outer shell stay stationary.
+
+These are **continuous native Safari screen recordings**, captured with the user-authorized macOS screencapture command. The review clips trim idle lead-in/out and resize the recording; they do not synthesize geometry or reconstruct animation from stills:
+
+- [Light Safari recording](../test-results/safari-light-verified.mp4) · [untrimmed original](../test-results/safari-light-final.mov)
+- [Dark Safari recording](../test-results/safari-dark-verified.mp4) · [untrimmed original](../test-results/safari-dark-final.mov)
+- [Intermediate frames: both themes and directions](../test-results/safari-intermediate-frames.jpg)
+- [Frame timestamps](../test-results/safari-frame-timestamps.json)
+- [Light geometry trace and loaded-source verification](../test-results/safari-light.json)
+- [Dark geometry trace and loaded-source verification](../test-results/safari-dark.json)
+
+The contact sheet contains actual recording crops around 0, 80, 160, 240 and 360ms. The intermediate silhouettes visibly differ. Times are approximate to the captured display frame; the exact video timestamps are recorded separately. Earlier incomplete recordings and paused-frame experiments are not used as acceptance evidence.
+
+Reduced motion was verified separately in **actual Safari with the preference media query emulated before the real component initialized**. Four real product selections aligned immediately, without entering the flowing state. [Reduced-motion result](../test-results/safari-reduced.json). The physical macOS preference toggle was not changed or tested.
+
+Safari WebDriver could not create a session even after remote automation was enabled; it timed out. Native Safari interaction, a local diagnostic page and macOS recordings supplied the evidence instead. An earlier backgrounded light capture failed its live-frame count; the final foreground run and recordings above passed. No claim is made about frame rate in background tabs or all Safari/device versions.
+
+## Regression results
+
+- Python suite: **11 passed**.
+- Shared geometry unit tests: **5 passed**, including repeated interrupted-contour containment.
+- Product JavaScript unit tests: **6 passed**.
+- Product browser functional suite: **92 passed** (controlled backend/media, including SSE, recovery, history, memory and Speak lifecycle).
+- Product light/dark layout and motion suite: **390 passed**, at 390, 768, 1024 and 1440px.
+- Independent shared component browser suite: **150 passed**, including numeric intermediate frames, uninterrupted playback, reversal inheritance, keyboard controls, reduced motion, destroy and idle cleanup.
+- Snapshot byte/content-pin verification: passed.
+- Syntax validation: 26 JavaScript and 3 Python files passed; Git whitespace checks passed in both repositories.
+
+The large browser regression suites ran in the in-app browser; the native Safari acceptance results are documented separately above. One idle-placeholder observation was skipped because of page visibility/focus; the six deterministic placeholder tests passed. No JavaScript errors or unhandled rejections were reported by the functional suite.
+
+The product motion assertions now require the non-reduced control to enter `flowing`, paint at least five different real-time SVG attributes, extend its width and settle. Immediate fallback cannot satisfy them. Deterministic shared checks continue to inspect every 15ms frame. The assertion count changed because native keyframe enumeration was replaced with real-time painted-geometry checks; it is not comparable directly to the older total.
+
+[Functional log](../test-results/safari-final-browser-checks.txt) · [Theme/motion log](../test-results/safari-final-theme-checks.txt) · [Shared log](../test-results/safari-final-shared-checks.txt) · [Console log](../test-results/safari-final-console.json)
+
+Physical microphones, authenticated model inference, mobile software keyboards, assistive technologies and additional Safari versions were not tested in this correction. Functional media/backend tests use the existing controlled fixtures. Native Safari visual tests use the actual application presentation and do not submit chat requests.
+
+## Files changed by this correction
+
+Curiora-Design-System (8):
+
+- `README.md`
+- `distribution.json`
+- `docs/components.md`
+- `docs/motion.md`
+- `js/liquid.js`
+- `js/liquid.test.mjs`
+- `playground/controls-checks.js`
+- `playground/controls.html`
+
+Curio-Web (10):
+
+- `docs/design-system.md`
+- `docs/shared-components.md`
+- `docs/validation.md`
+- `static/curiora/liquid.js`
+- `static/curiora/snapshot.json`
+- `sync_curiora.py` (restored)
+- `tests/motion_checks.js`
+- `tests/safari_checks.js` (new, development only)
+- `tests/serve_browser.py`
+- `tests/test_curiora.py`
+
+[Incremental Design System Git diff](../test-results/safari-design-system.diff) · [Incremental Curio-Web Git diff](../test-results/safari-curio-web.diff) · [Final status and preservation check](../test-results/safari-final-status.txt)
+
+---
+
+# Shared Liquid & Voice components — 16 October 2026
+
+Implemented in the existing Curiora-Design-System and Curio-Web repositories, both on `main`. Design System base: `d113483`; Curio-Web base: `15c3eb0`. No branches, worktrees, clones, commits or pushes were created. The original local `main.py` removal of an unused `uvicorn` import remains untouched. Starting diffs/source snapshots and final Git status are saved in the existing ignored `test-results` directory.
+
+## Shared architecture and geometry
+
+Curiora-Design-System owns all reusable capsule geometry, material colors, keyboard/focus behavior, motion primitives and original voice strokes. `distribution.json` declares interactions 1.0.0. Curio-Web consumes exact source copies and a generated Jinja icon partial through `sync_curiora.py`. The manifest records source base revision, uncommitted-source provenance, per-file hashes and combined SHA-256 **`d9ad3f07f9df2e8426cef0fb00befa54be9f0586abe03de0f30826696b6f0481`**. There is no package manager, framework, runtime GitHub request or runtime cross-repository import. Existing content-versioned static URLs include nested shared imports. See [update mechanism](shared-components.md).
+
+The selected material is one persistent SVG path with eight connected cubic curves. Its leading shoulder stays full while the tail narrows by up to 24% and the middle forms a small waist. Independent smoothstep boundaries extend it by about 24% for adjacent equal segments and normalize the outline over 360ms. Twenty-five native keyframes coordinate width/translation and path contour on one timeline. The shell and labels remain fixed. A reversal starts from the rendered edges and path before cancellation. There is no continuous JavaScript rendering loop, detached blob, moving light sweep or outside halo. The tint can be disabled without obscuring silhouette movement.
+
+The original symmetric voice geometry uses five rounded strokes of 3.5 / 9.75 / 16.5 / 9.75 / 3.5 units, spaced precisely in a 24-unit viewBox with a 1.8-unit weight. White strokes remain clear on blue in both themes. One 320ms hover response grows outer strokes and contracts inner strokes, staggered by 0/35/70ms; it stops by 390ms including delay. Idle and active voice states have no repeating fake audio-level animation.
+
+Curio retains ownership of workspace panels, drafts, REST/SSE/recovery, preferences, dictation and WebSocket sessions. It supplies configured, recognition-start, pending-question and speech-start state to the visual helper. The dialog adds a labeled stop/leave control through the existing close behavior; accepted answers can still complete in Chat after it closes. The separate editable dictation microphone and mutually exclusive Speak/Send slot remain intact. The horizontal composer focus artifact stays removed with accessible perimeter focus.
+
+## Verification
+
+| Check | Result |
+| --- | --- |
+| Python tests, including snapshot and nested asset integrity | 11 passed |
+| Product placeholder JavaScript tests | 6 passed |
+| Shared geometry/voice JavaScript tests | 4 passed |
+| Product functional browser checks | 92 passed |
+| Product theme/layout/motion checks | 478 passed |
+| Independent shared browser checks | 144 passed |
+| Source snapshot verification | Passed |
+| JavaScript syntax | 25 files parsed |
+| Git whitespace | Both repositories passed |
+| Versioned browser assets | 24 unique assets returned 200 |
+| Product console/unhandled errors | None in the final functional run |
+
+Product themes were checked at 390, 768, 1024 and 1440px, including dialogs, both workspaces, mobile drawer, composer action slot, multiline drafts and focus. Frame checks inspect both edge geometry and contour every 15ms, visible shape inheritance during rapid reversals, containment, exact settlement, stopped animation, and reduced motion requested during travel. The independent playground also verifies three labeled segments and disabled-item keyboard navigation. Native SVG path animation support was confirmed in the test browser.
+
+Functional verification covers effort persistence, capability menus, attachments, multipart contracts, SSE deduplication, polling/recovery, history, memory, dictation, real configured-session state, recognition-start listening state, accepted-question responding state, stop/leave and accepted answers finishing after close. Browser media/backend behavior is controlled by the development harness. One idle-placeholder observation may be skipped when focus/visibility prevents observation; its six deterministic unit tests passed.
+
+Actual pointer hover inspection sampled all five bars through 390ms in both themes: white strokes, stable button bounds, staggered transforms and complete return to rest. Active voice screenshots show the connected test WebSocket session and recognition-start fixture event, and are labeled as controlled evidence. No camera or microphone permission was requested.
+
+## Visual evidence
+
+- [Fluid animation recording](../test-results/shared-liquid-motion.mp4): 7.5 seconds, light and dark together, both directions, normal timing and 4× slower replay. The blue undertone is disabled to make silhouette acceptance independent of coloration.
+- [Voice hover recording](../test-results/shared-voice-hover.mp4): 4 seconds, both themes, one actual hover response and slower replay.
+- [Before-change / travel / settled frame sheet](../test-results/shared-liquid-frames.jpg).
+- Product desktop: [light](../test-results/shared-curio-light.jpg), [dark](../test-results/shared-curio-dark.jpg).
+- Product mobile: [light](../test-results/shared-curio-mobile-light.jpg), [dark](../test-results/shared-curio-mobile-dark.jpg).
+- Controlled voice session: [ready](../test-results/shared-voice-ready.jpg), [listening](../test-results/shared-voice-listening.jpg).
+- [Standalone playground](../test-results/shared-playground.jpg).
+- [Unit/syntax results](../test-results/shared-unit-checks.txt), [product browser results](../test-results/shared-browser-checks.txt), [theme/motion results](../test-results/shared-theme-checks.txt), [shared browser results](../test-results/shared-components-checks.txt), [console](../test-results/shared-console.json).
+
+The videos are assembled from actual browser screenshots of the real component animations, with before-change resting captures and subsequent 15ms samples. They are frame-stepped renderer captures, not continuous desktop recordings or performance benchmarks. No shape or icon animation was recreated for the videos. Physical microphones/speech services, real authenticated inference, physical mobile keyboards and assistive technology were not exercised. The native path-interpolation fallback is immediate accessible selection; animation performance on every older device/browser has not been established. No OS appearance or reduced-motion setting was changed.
+
+## Changed files — Curiora-Design-System (13)
+
+- `README.md`
+- `css/controls.css`
+- `distribution.json`
+- `docs/components.md`
+- `docs/human-interface-principles.md`
+- `docs/motion.md`
+- `js/liquid.js`
+- `js/liquid.test.mjs`
+- `js/voice-control.js`
+- `playground/controls-checks.js`
+- `playground/controls.html`
+- `playground/controls.js`
+- `playground/index.html`
+
+## Changed files — Curio-Web (28)
+
+- `docs/design-system.md`
+- `docs/shared-components.md`
+- `docs/validation.md`
+- `static/css/app.css`
+- `static/css/base.css`
+- `static/css/chat.css`
+- `static/css/live.css`
+- `static/css/tokens.css`
+- `static/curiora/controls.css`
+- `static/curiora/liquid.js`
+- `static/curiora/snapshot.json`
+- `static/curiora/voice-control.js`
+- `static/js/live.js`
+- `static/js/motion.js`
+- `static/js/shell.js`
+- `sync_curiora.py`
+- `templates/base.html`
+- `templates/components/composer.html`
+- `templates/components/curiora_voice.html`
+- `templates/components/icons.html`
+- `templates/components/live_modal.html`
+- `templates/index.html`
+- `tests/browser_checks.js`
+- `tests/browser_setup.js`
+- `tests/motion_checks.js`
+- `tests/serve_browser.py`
+- `tests/test_curiora.py`
+- `tests/theme_checks.js`
+
+`main.py` appears separately in the full working-tree status because of the pre-existing local edit; it is excluded from the task patch.
+
+[Design System diff](../test-results/shared-design-system.diff), [Curio-Web task diff](../test-results/shared-curio-web-task.diff), [complete Curio-Web working-tree diff](../test-results/shared-curio-web.diff), [both Git statuses](../test-results/shared-git-status.txt).
+
+Earlier reports below describe historical states.
+
+---
+
 # Liquid capsule and voice icon refinement — 16 October 2026
 
 Implemented directly in `/Users/saiganeshsattenapalli/my projects/Curiora/Curio-Web` on existing `main`, HEAD `f4a8305`. No branch, worktree, clone, commit or push was created. Nothing is staged. The starting diff and source snapshot are saved in `test-results/liquid-start.diff` and `liquid-start-files.json`.

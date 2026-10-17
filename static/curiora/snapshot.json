@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "version": "1.0.1",
+  "snapshot_sha256": "7f34ff37dd3536640732df5ec0186d850372a0575e204ca778a62b0e31190fe9",
+  "source_repository": "https://github.com/Curiora-intelligence/Curiora-Design-System",
+  "source_base_revision": "d1134839e70d4352c0c397150f3057ac4348ecbe",
+  "source_files_uncommitted": true,
+  "files": {
+    "static/curiora/controls.css": "09595a77f80c16829c4f54ce3ec25295d1b71f844d115cfa39e3232e79e496c4",
+    "static/curiora/liquid.js": "098c674fb10dd9e7cbbe318a8673c73585155f6ca108a948dcad11c00f287a0b",
+    "static/curiora/voice-control.js": "17772c8375a583fbbb41eda39d4a3302045cbd5153eb22b5599d115182d80ae3",
+    "templates/components/curiora_voice.html": "fffdb608169fc4e2b9d40e950e484a5f8a26357cfdc955e5e9d2e2fae61f2f72"
+  }
+}

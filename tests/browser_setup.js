@@ -13,7 +13,7 @@ Object.defineProperty(navigator.mediaDevices,'getUserMedia',{configurable:true,v
   window.__mediaRequests++; throw new Error('Camera access must never be requested by Curio Web');
 }});
 window.SpeechRecognition = class {
-  start(){window.__recognition=this;}
+  start(){window.__recognition=this;this.onstart?.();}
   stop(){this.onend?.();}
 };
 

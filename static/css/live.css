@@ -33,3 +33,6 @@
     background: var(--surface-accent) !important;
     color: var(--accent-text) !important;
 }
+.speak-session { display: flex; align-items: center; gap: 12px; margin-block: 20px 12px; }
+.speak-session .speak-state { margin: 0; }
+.speak-session .curiora-primary { --curiora-control-size: 44px; }

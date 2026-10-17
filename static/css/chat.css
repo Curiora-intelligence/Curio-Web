@@ -331,65 +331,10 @@ pre {
   }
 }
 
-.composer-primary {
-  background: var(--primary-fill);
-  color: var(--primary-ink);
-  border: 1px solid transparent;
-  box-shadow: var(--shadow-soft);
-  transition: background var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
-}
-
-@media (hover: hover) {
-  .composer-primary:hover:not(:disabled) {
-    background: var(--primary-hover);
-    border-color: var(--primary-border-hover);
-    box-shadow: var(--shadow-primary-hover);
-  }
-}
-
-.composer-primary:active:not(:disabled) {
-  background: var(--primary-pressed);
-  box-shadow: var(--shadow-soft);
-}
-
+/* Send direction is product-specific; the shared library owns primary materials and voice motion. */
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  #open-live:hover svg path {
-    transform-box: fill-box;
-    transform-origin: center;
-    --wave-height: 2;
-    animation: waveform-response 300ms var(--ease-standard);
-  }
-
-  #open-live:hover svg path:nth-child(2),
-  #open-live:hover svg path:nth-child(4) {
-    --wave-height: .48;
-    animation-delay: 35ms;
-  }
-
-  #open-live:hover svg path:nth-child(3) {
-    --wave-height: .55;
-    animation-delay: 70ms;
-  }
-
-  #send svg {
-    transition: transform var(--duration-fast) var(--ease-standard);
-  }
-
-  #send:hover:not(:disabled) svg {
-    transform: translateY(-1.5px);
-  }
-}
-
-@keyframes waveform-response {
-
-  0%,
-  100% {
-    transform: scaleY(1);
-  }
-
-  42% {
-    transform: scaleY(var(--wave-height));
-  }
+  #send svg { transition: transform var(--duration-fast) var(--ease-standard); }
+  #send:hover:not(:disabled) svg { transform: translateY(-1.5px); }
 }
 
 .effort-button {

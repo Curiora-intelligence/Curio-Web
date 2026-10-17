@@ -26,11 +26,7 @@
     {% elif name == 'arrow' %}
     <path d="M12 19V5m-6 6 6-6 6 6" />
     {% elif name == 'speak' %}
-    <path d="M4 10v4" />
-    <path d="M8 6v12" />
-    <path d="M12 3v18" />
-    <path d="M16 7v10" />
-    <path d="M20 10v4" />
+    {% include 'components/curiora_voice.html' %}
     {% elif name == 'desktop' %}
     <rect x="3" y="4" width="18" height="13" rx="2" />
     <path d="M8 21h8M12 17v4" />
